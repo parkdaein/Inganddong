@@ -1,1788 +1,575 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>인간똥의 응가참기 - 효원고 야자 대작전</title>
-    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #0b0f19;
-            --panel-bg: #111827;
-            --border-color: #374151;
-            --safe-green: #22c55e;
-            --danger-red: #ef4444;
-            --gold: #fde047;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>인간똥의 응가참기 - 효원고 야자 생존기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #141923;
+      color: #f8fafc;
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: manipulation;
+    }
+    #app {
+      position: relative;
+      width: 100%;
+      max-width: 540px;
+      height: 100dvh;
+      max-height: 860px;
+      background: #1e293b;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+    }
 
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
-        }
+    /* 상단 HUD */
+    #hud {
+      padding: 10px 14px 8px;
+      background: #0f172a;
+      border-bottom: 2px solid #334155;
+      z-index: 5;
+    }
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .stage-badge {
+      background: #f59e0b;
+      color: #111827;
+      font-weight: 900;
+      font-size: 14px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .timer-box {
+      font-size: 20px;
+      font-weight: 900;
+      color: #38bdf8;
+      letter-spacing: 0.5px;
+    }
+    .timer-box.urgent {
+      color: #fb7185;
+      animation: pulseText 0.5s infinite alternate;
+    }
+    @keyframes pulseText {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    .bars-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .bar-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .bar-track {
+      width: 100%;
+      height: 12px;
+      background: #334155;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #475569;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 100%;
+      transition: width 0.08s linear;
+    }
+    #hpBar {
+      background: linear-gradient(90deg, #ef4444, #22c55e);
+    }
+    #pressureBar {
+      width: 15%;
+      background: linear-gradient(90deg, #eab308, #dc2626);
+    }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100dvh;
-            background-color: var(--bg-dark);
-            font-family: 'Jua', 'Noto Sans KR', sans-serif;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
+    /* 메인 게임 캔버스 */
+    #canvasWrap {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      background: #2b3a2e;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    #feedbackBanner {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 15px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      white-space: nowrap;
+      z-index: 6;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    #feedbackBanner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
 
-        #game-wrapper {
-            width: 100%;
-            max-width: 720px;
-            height: 100dvh;
-            max-height: 900px;
-            background: #1a202c;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            border: 3px solid var(--border-color);
-            border-radius: 14px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
-            overflow: hidden;
-        }
+    /* 하단 타이밍 게이지 & 컨트롤 */
+    #controls {
+      padding: 12px 16px 18px;
+      background: #0f172a;
+      border-top: 2px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 5;
+    }
+    .gauge-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+    #timingTrack {
+      position: relative;
+      width: 100%;
+      height: 36px;
+      background: linear-gradient(90deg, #991b1b, #b91c1c);
+      border-radius: 10px;
+      border: 3px solid #64748b;
+      overflow: hidden;
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+    }
+    #greenZone {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 38%;
+      width: 24%;
+      background: linear-gradient(180deg, #4ade80, #16a34a);
+      border-left: 2px solid #dcfce7;
+      border-right: 2px solid #dcfce7;
+      box-shadow: 0 0 12px rgba(74, 222, 128, 0.7);
+    }
+    #cursor {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      left: 0%;
+      width: 8px;
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 4px;
+      transform: translateX(-50%);
+      box-shadow: 0 0 10px #fff;
+    }
+    #squeezeBtn {
+      width: 100%;
+      height: 64px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #f97316, #c2410c);
+      color: #fff;
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #7c2d12, 0 10px 20px rgba(0,0,0,0.45);
+      transition: transform 0.05s, box-shadow 0.05s;
+      touch-action: manipulation;
+    }
+    #squeezeBtn:active, #squeezeBtn.pressed {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #7c2d12;
+      background: linear-gradient(180deg, #ea580c, #9a3412);
+    }
 
-        /* 상단 상태바 (HUD) */
-        #hud {
-            background: rgba(17, 24, 39, 0.98);
-            padding: 8px 12px;
-            border-bottom: 3px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            z-index: 10;
-            flex-shrink: 0;
-        }
-
-        .hud-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stage-badge {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #111827;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 1.05rem;
-            font-weight: 900;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-        }
-
-        .timer-box {
-            font-size: 1.35rem;
-            color: var(--gold);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .sound-btn {
-            background: #374151;
-            border: 2px solid #4b5563;
-            color: #ffffff;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .sound-btn:active { transform: scale(0.92); }
-
-        .hud-bars {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .stat-group {
-            background: #1f2937;
-            padding: 6px 10px;
-            border-radius: 10px;
-            border: 1px solid #374151;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: #e5e7eb;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-        }
-
-        .bar-track {
-            width: 100%;
-            height: 15px;
-            background: #111827;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #4b5563;
-            position: relative;
-        }
-
-        .hp-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
-            transition: width 0.12s ease-out;
-        }
-
-        .pressure-fill {
-            height: 100%;
-            width: 20%;
-            background: linear-gradient(90deg, #84cc16, #eab308, #dc2626);
-            transition: width 0.08s linear;
-        }
-
-        /* 메인 교실 캔버스 영역 */
-        #canvas-container {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            min-height: 0;
-            background: #1e293b;
-            overflow: hidden;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* 하단 컨트롤 영역 (타이밍 게이지 + 거대한 엉덩이 힘주기 버튼) */
-        #controls {
-            background: var(--panel-bg);
-            padding: 10px 14px 14px;
-            border-top: 3px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 10;
-            flex-shrink: 0;
-        }
-
-        .timing-wrapper {
-            position: relative;
-            width: 100%;
-            height: 36px;
-            background: #dc2626;
-            border-radius: 18px;
-            border: 3px solid #f3f4f6;
-            overflow: hidden;
-            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
-        }
-
-        #warn-zone {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            background: #facc15;
-            left: 30%;
-            width: 40%;
-        }
-
-        #safe-zone {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            background: var(--safe-green);
-            left: 37%;
-            width: 26%;
-            box-shadow: 0 0 14px #4ade80;
-            border-left: 2px solid #ffffff;
-            border-right: 2px solid #ffffff;
-        }
-
-        #cursor {
-            position: absolute;
-            top: -2px;
-            width: 12px;
-            height: 34px;
-            background: #ffffff;
-            border: 2px solid #000000;
-            border-radius: 4px;
-            left: 10%;
-            transform: translateX(-50%);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.95);
-            z-index: 5;
-        }
-
-        .timing-hint {
-            text-align: center;
-            font-size: 0.85rem;
-            color: #d1d5db;
-        }
-
-        #squeeze-btn {
-            width: 100%;
-            padding: 15px 12px;
-            font-family: 'Jua', sans-serif;
-            font-size: 1.55rem;
-            color: #ffffff;
-            background: linear-gradient(180deg, #f97316 0%, #c2410c 100%);
-            border: 3px solid #fdba74;
-            border-radius: 16px;
-            cursor: pointer;
-            box-shadow: 0 6px 0 #7c2d12, 0 10px 20px rgba(0, 0, 0, 0.55);
-            transition: transform 0.05s, box-shadow 0.05s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #squeeze-btn:active, #squeeze-btn.pressed {
-            transform: translateY(5px);
-            box-shadow: 0 1px 0 #7c2d12, 0 4px 10px rgba(0, 0, 0, 0.5);
-            background: linear-gradient(180deg, #ea580c 0%, #9a3412 100%);
-        }
-
-        /* 오버레이 모달 */
-        .overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(11, 15, 25, 0.94);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-            text-align: center;
-            z-index: 30;
-            backdrop-filter: blur(4px);
-            overflow-y: auto;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .title-logo {
-            font-size: 2.35rem;
-            color: var(--gold);
-            text-shadow: 0 4px 0 #92400e, 0 8px 20px rgba(0, 0, 0, 0.85);
-            margin-bottom: 6px;
-            line-height: 1.15;
-        }
-
-        .subtitle {
-            font-size: 1.05rem;
-            color: #93c5fd;
-            margin-bottom: 14px;
-        }
-
-        .story-card {
-            background: #1f2937;
-            border: 2px solid #4b5563;
-            border-radius: 14px;
-            padding: 14px 16px;
-            max-width: 500px;
-            width: 100%;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            color: #e5e7eb;
-            margin-bottom: 16px;
-            text-align: left;
-        }
-
-        .story-card strong {
-            color: var(--gold);
-        }
-
-        .action-btn {
-            background: linear-gradient(180deg, #22c55e, #15803d);
-            border: 3px solid #86efac;
-            color: #ffffff;
-            font-family: 'Jua', sans-serif;
-            font-size: 1.35rem;
-            padding: 13px 28px;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 6px 0 #14532d;
-            transition: transform 0.1s, opacity 0.2s, filter 0.2s;
-            width: 100%;
-            max-width: 340px;
-        }
-
-        .action-btn:active:not(:disabled) {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #14532d;
-        }
-
-        /* 2.2초 쿨타임 동안 버튼 완벽 잠금 */
-        .action-btn:disabled {
-            opacity: 0.5;
-            filter: grayscale(0.75);
-            cursor: not-allowed;
-            pointer-events: none;
-            box-shadow: 0 3px 0 #374151;
-        }
-
-        .cutscene-canvas {
-            width: 100%;
-            max-width: 500px;
-            height: 230px;
-            background: #1e293b;
-            border: 3px solid #6b7280;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            flex-shrink: 0;
-        }
-
-        .mock-chat-box {
-            background: #111827;
-            border: 2px solid #ef4444;
-            border-radius: 12px;
-            padding: 10px 12px;
-            width: 100%;
-            max-width: 500px;
-            font-size: 0.86rem;
-            line-height: 1.45;
-            color: #f3f4f6;
-            margin-bottom: 12px;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(-7px, 4px) rotate(-1deg); }
-            40% { transform: translate(7px, -4px) rotate(1deg); }
-            60% { transform: translate(-5px, -3px) rotate(-0.5deg); }
-            80% { transform: translate(5px, 3px) rotate(0.5deg); }
-        }
-
-        .shake-effect {
-            animation: shake 0.35s ease-in-out;
-        }
-
-        @media (max-width: 480px) {
-            #game-wrapper { border-radius: 0; border-left: none; border-right: none; }
-            .title-logo { font-size: 1.85rem; }
-            #squeeze-btn { font-size: 1.35rem; padding: 13px; }
-            .cutscene-canvas { height: 195px; }
-            .mock-chat-box { font-size: 0.8rem; padding: 8px 10px; }
-        }
-    </style>
+    /* 오버레이 화면 (시작, 스테이지 클리어, 패배 놀림, 최종 엔딩) */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.94);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      z-index: 20;
+    }
+    .overlay.hidden {
+      display: none;
+    }
+    .overlay h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      color: #fbbf24;
+      text-shadow: 0 3px 0 #78350f;
+    }
+    .overlay h2 {
+      margin: 0 0 8px;
+      font-size: 25px;
+      color: #f87171;
+    }
+    .overlay p {
+      margin: 6px 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      max-width: 420px;
+    }
+    .cutscene-canvas {
+      width: 100%;
+      max-width: 420px;
+      height: 250px;
+      border-radius: 14px;
+      border: 3px solid #475569;
+      background: #1e293b;
+      margin: 10px 0 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .action-btn {
+      margin-top: 8px;
+      padding: 14px 28px;
+      font-size: 18px;
+      font-weight: 900;
+      color: #0f172a;
+      background: linear-gradient(180deg, #fde047, #eab308);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #a16207;
+      touch-action: manipulation;
+    }
+    .action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: translateY(3px);
+    }
+    .rule-box {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 10px 0;
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      width: 100%;
+      max-width: 400px;
+    }
+    .rule-box strong {
+      color: #4ade80;
+    }
+    .rule-box .warn {
+      color: #f87171;
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
-
-<div id="game-wrapper">
-    <!-- 상단 HUD -->
+  <div id="app">
+    <!-- 상단 상태 표시줄 -->
     <div id="hud">
-        <div class="hud-top">
-            <div class="stage-badge" id="stage-display">야자 1교시 (1/5)</div>
-            <div class="timer-box">⏱️ <span id="timer-display">30.0</span>초</div>
-            <button class="sound-btn" id="sound-toggle" title="소리 켜기/끄기">🔊</button>
+      <div class="hud-top">
+        <span class="stage-badge" id="stageLabel">야자 1교시 / 5교시</span>
+        <span class="timer-box" id="timerLabel">30.0초</span>
+      </div>
+      <div class="bars-wrap">
+        <div class="bar-item">
+          <div class="bar-label">
+            <span>💪 괄약근 체력</span>
+            <span id="hpText">100%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="hpBar"></div>
+          </div>
         </div>
-        <div class="hud-bars">
-            <div class="stat-group">
-                <div class="stat-label">
-                    <span>💪 괄약근 체력</span>
-                    <span id="hp-text">100 / 100</span>
-                </div>
-                <div class="bar-track">
-                    <div class="hp-fill" id="hp-bar"></div>
-                </div>
-            </div>
-            <div class="stat-group">
-                <div class="stat-label">
-                    <span>💩 응가 압력</span>
-                    <span id="pressure-text">20%</span>
-                </div>
-                <div class="bar-track">
-                    <div class="pressure-fill" id="pressure-bar"></div>
-                </div>
-            </div>
+        <div class="bar-item">
+          <div class="bar-label">
+            <span>💩 밀려나오는 압력</span>
+            <span id="pressureText">15%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="pressureBar"></div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- 메인 교실 플레이 캔버스 -->
-    <div id="canvas-container">
-        <canvas id="gameCanvas"></canvas>
+    <!-- 메인 교실 캔버스 -->
+    <div id="canvasWrap">
+      <canvas id="gameCanvas"></canvas>
+      <div id="feedbackBanner">나이스! 쏙 들어갔다!</div>
     </div>
 
-    <!-- 하단 컨트롤러 -->
+    <!-- 하단 게이지 & 버튼 -->
     <div id="controls">
-        <div class="timing-wrapper" id="timing-bar">
-            <div id="warn-zone"></div>
-            <div id="safe-zone"></div>
-            <div id="cursor"></div>
-        </div>
-        <div class="timing-hint">▲ 커서가 <strong>초록색 안전 구역</strong>에 들어왔을 때 눌러서 밀어 넣으세요!</div>
-        <button id="squeeze-btn">🍑 엉덩이 힘주기! (SPACE)</button>
+      <div class="gauge-header">
+        <span>🟢 초록 구간에서 힘주기!</span>
+        <span>❌ 빨간 구간 헛힘 = 괄약근 체력 -25</span>
+      </div>
+      <div id="timingTrack">
+        <div id="greenZone"></div>
+        <div id="cursor"></div>
+      </div>
+      <button id="squeezeBtn" type="button">🔥 엉덩이 힘주기! (SPACE)</button>
     </div>
 
     <!-- 1. 시작 화면 -->
-    <div id="start-screen" class="overlay">
-        <div class="title-logo">💩 인간똥의 응가참기</div>
-        <div class="subtitle">🏫 효원고등학교 야간자율학습 생존기</div>
-        <div class="story-card">
-            야자 1교시 시작과 동시에 찾아온 거대한 배앓이 신호...!<br>
-            주인공 <strong>'인간똥'</strong>은 총 <strong>5교시(30초→45초→60초→75초→90초)</strong> 동안 극한의 신호를 버텨내야 합니다!<br><br>
-            ✅ <strong>초록색 구역</strong>에서 <strong>[엉덩이 힘주기]</strong>를 누르면 밀려나오던 응가 압력이 <strong>22~28%</strong> 쑥 들어갑니다.<br>
-            ❌ <strong>빨간/노란 구역</strong>에서 헛힘을 쓰면 <strong>괄약근 체력</strong>이 <strong>25씩 감소</strong>합니다.<br>
-            ⚠️ 체력이 0이 되거나 압력이 100%에 달하면 감독관 <strong>최난수 선생님</strong>에게 발각되어 <strong>변발, 돌배, 물고기</strong>에게 평생 놀림감이 됩니다!
-        </div>
-        <button class="action-btn" id="start-btn">야자 1교시 버티기 시작!</button>
+    <div class="overlay" id="startOverlay">
+      <h1>💩 인간똥의 응가참기</h1>
+      <p style="color:#93c5fd; font-weight:700;">배경: 효원고등학교 야간자율학습 교실</p>
+      <div class="rule-box">
+        • 야자 1교시(30초)부터 5교시(90초)까지 총 5스테이지!<br/>
+        • 시간이 지날수록 <strong>밀려나오는 압력</strong>이 점점 차오릅니다.<br/>
+        • 움직이는 게이지의 <strong>초록색 구역</strong>에서 버튼을 눌러 똥을 밀어 넣으세요!<br/>
+        • <span class="warn">빨간 구역에서 헛힘을 주면 괄약근 체력이 소진</span>되며, 체력이 0이 되면 <strong>최난수</strong> 선생님에게 발각되어 <strong>변발·돌배·물고기</strong>에게 평생 놀림받습니다!
+      </div>
+      <button class="action-btn" id="startBtn" type="button">야자 1교시 참기 시작!</button>
     </div>
 
-    <!-- 2. 스테이지 클리어 브릿지 화면 -->
-    <div id="stage-clear-screen" class="overlay hidden">
-        <div class="title-logo" id="clear-title">야자 1교시 생존 성공!</div>
-        <div class="subtitle" id="clear-subtitle">휴... 일단 큰 고비는 넘겼다!</div>
-        <div class="story-card" id="clear-desc" style="text-align: center;">
-            잠깐의 쉬는 시간 동안 심호흡을 하며 괄약근 체력을 회복했습니다!
-        </div>
-        <button class="action-btn" id="next-stage-btn">다음 교시 시작 ▶</button>
+    <!-- 2. 스테이지 클리어 화면 -->
+    <div class="overlay hidden" id="stageClearOverlay">
+      <h1 style="color:#4ade80;" id="clearTitle">야자 1교시 생존 성공!</h1>
+      <p id="clearDesc">휴... 고비를 넘겼다! 하지만 다음 교시는 15초 더 길어진다!</p>
+      <button class="action-btn" id="nextStageBtn" type="button">다음 교시 버티기</button>
     </div>
 
-    <!-- 3. 게임 오버 화면 (최난수 발각 + 변발, 돌배, 물고기 놀림) -->
-    <div id="gameover-screen" class="overlay hidden">
-        <div class="title-logo" style="color: #ef4444; font-size: 1.95rem; margin-bottom: 4px;">🚨 최난수 감독관 발각!!</div>
-        <div class="subtitle" id="gameover-reason" style="color: #fca5a5; margin-bottom: 8px; font-size: 0.95rem;">괄약근이 한계를 버티지 못했습니다...</div>
-        <canvas id="gameoverCanvas" class="cutscene-canvas" width="500" height="230"></canvas>
-        <div class="mock-chat-box" id="mock-dialogue-box">
-            <div><strong style="color:#fde047;">👮 최난수:</strong> "삐이익!! 거기 인간똥! 야자 시간에 무슨 짓이야! 당장 교실 밖으로 나가!"</div>
-            <div><strong style="color:#60a5fa;">💇 변발:</strong> "푸하하하! 야자 째려다 바지에 지렸대요~!"</div>
-            <div><strong style="color:#a3e635;">🍐 돌배:</strong> "으악 냄새나! 인간똥이 진짜 똥 쌌다!!"</div>
-            <div><strong style="color:#38bdf8;">🐟 물고기:</strong> "뻐끔뻐끔~ 똥싸개 인간똥! 전교에 소문내자!"</div>
-        </div>
-        <button class="action-btn" id="retry-btn" style="background: linear-gradient(180deg, #ef4444, #b91c1c); border-color: #fca5a5; box-shadow: 0 6px 0 #7f1d1d;" disabled>놀림 감상 중... (2.2초)</button>
+    <!-- 3. 패배 & 놀림 컷신 화면 -->
+    <div class="overlay hidden" id="gameOverOverlay">
+      <h2>🚨 최난수 감독관에게 발각!! 🚨</h2>
+      <p id="failReasonText" style="color:#fca5a5; font-weight:700;">괄약근 체력이 0이 되어 교실에서 쫓겨났습니다!</p>
+      <canvas class="cutscene-canvas" id="mockCanvas" width="420" height="250"></canvas>
+      <p style="font-size:13px; color:#fde047; font-weight:700;">
+        변발·돌배·물고기: "으악! 효원고 인간똥 쌌대요~! 똥쟁이~!!"
+      </p>
+      <button class="action-btn" id="retryBtn" type="button" disabled>잠시 후 다시 도전 (2초)</button>
     </div>
 
-    <!-- 4. 최종 엔딩 화면 (5스테이지 클리어) -->
-    <div id="ending-screen" class="overlay hidden">
-        <div class="title-logo" style="color: #4ade80; font-size: 2.1rem;">🎉 야자 5교시 완벽 클리어!</div>
-        <div class="subtitle" style="color: #fef08a;">집 화장실 도착! 세상에서 가장 행복한 순간 ✨</div>
-        <canvas id="endingCanvas" class="cutscene-canvas" width="500" height="230"></canvas>
-        <div class="story-card" style="text-align: center; margin-bottom: 12px;">
-            효원고등학교 야자 5교시를 모두 이겨낸 전설의 <strong>인간똥</strong>!<br>
-            집에 도착하자마자 황금빛 변기 위에 앉아 세상을 다 가진 듯한 쾌변을 이뤄냈습니다.<br>
-            <strong>"아아... 이것이 진정한 극락이다..."</strong>
-        </div>
-        <button class="action-btn" id="replay-btn">명예의 전당 다시 도전 🏆</button>
+    <!-- 4. 최종 5스테이지 클리어 행복한 엔딩 화면 -->
+    <div class="overlay hidden" id="endingOverlay">
+      <h1 style="color:#fde047;">🎉 야자 5교시 완전 정복! 🎉</h1>
+      <p style="color:#86efac; font-weight:700;">집에 무사히 도착한 인간똥, 드디어 화장실 변기에서 해방되다!</p>
+      <canvas class="cutscene-canvas" id="endingCanvas" width="420" height="250"></canvas>
+      <p style="font-size:14px; color:#fef08a; font-weight:700;">
+        "아~ 살았다!! 세상에서 제일 행복한 순간이야~♪"
+      </p>
+      <button class="action-btn" id="playAgainBtn" type="button">처음부터 다시 플레이</button>
     </div>
-</div>
+  </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    /**
-     * ============================================================================
-     * 1. 안전한 Web Audio API 코믹 사운드 매니저 (모바일 차단 방어 try-catch 완비)
-     * ============================================================================
-     */
-    class SoundManager {
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // ==========================================
+      // 1. Web Audio API 효과음 및 행복한 엔딩 BGM
+      // ==========================================
+      class SoundManager {
         constructor() {
-            this.ctx = null;
-            this.muted = false;
+          this.ctx = null;
+          this.happyBgmTimer = null;
         }
 
         init() {
-            try {
-                if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) {
-                        this.ctx = new AudioCtx();
-                    }
-                }
-                if (this.ctx && this.ctx.state === 'suspended') {
-                    this.ctx.resume().catch(() => {});
-                }
-            } catch (e) {
-                // 오디오 초기화가 차단되어도 게임 로직은 정상 진행
+          try {
+            if (!this.ctx) {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) this.ctx = new AudioCtx();
             }
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume();
+            }
+          } catch (e) {}
         }
 
-        toggleMute() {
-            this.muted = !this.muted;
-            return this.muted;
+        playTone(freq, type, duration, vol = 0.15, delay = 0) {
+          try {
+            this.init();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime + delay;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(vol, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration);
+          } catch (e) {}
         }
 
         playSuccess() {
-            if (this.muted || !this.ctx) return;
-            try {
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(240, now);
-                osc.frequency.exponentialRampToValueAtTime(720, now + 0.14);
-
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.17);
-            } catch (e) {}
+          this.playTone(523.25, 'sine', 0.12, 0.18, 0);
+          this.playTone(783.99, 'triangle', 0.18, 0.18, 0.07);
         }
 
-        playFail() {
-            if (this.muted || !this.ctx) return;
-            try {
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(155, now);
-                osc.frequency.linearRampToValueAtTime(70, now + 0.26);
-
-                gain.gain.setValueAtTime(0.35, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.29);
-            } catch (e) {}
+        playFailHit() {
+          this.playTone(140, 'sawtooth', 0.22, 0.22, 0);
+          this.playTone(95, 'square', 0.25, 0.2, 0.08);
         }
 
-        playHeartbeat(intensity) {
-            if (this.muted || !this.ctx) return;
-            try {
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(85 + intensity * 35, now);
-                osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
-
-                gain.gain.setValueAtTime(0.22, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            } catch (e) {}
+        playHeartbeat() {
+          this.playTone(72, 'sine', 0.12, 0.2, 0);
+          this.playTone(62, 'sine', 0.15, 0.15, 0.14);
         }
 
-        playStageClear() {
-            if (this.muted || !this.ctx) return;
-            try {
-                const notes = [523.25, 659.25, 783.99];
-                notes.forEach((freq, idx) => {
-                    const t = this.ctx.currentTime + idx * 0.11;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, t);
-                    gain.gain.setValueAtTime(0.25, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(t);
-                    osc.stop(t + 0.24);
-                });
-            } catch (e) {}
+        playGameOverMock() {
+          // 호루라기 + 비웃음 효과음
+          this.playTone(2600, 'sine', 0.18, 0.18, 0);
+          this.playTone(2800, 'sine', 0.28, 0.18, 0.2);
+          const notes = [440, 392, 349.23, 329.63, 293.66];
+          notes.forEach((n, idx) => {
+            this.playTone(n, 'sawtooth', 0.2, 0.14, 0.55 + idx * 0.18);
+          });
         }
 
-        playGameOver() {
-            if (this.muted || !this.ctx) return;
-            try {
-                const now = this.ctx.currentTime;
+        startHappyEndingMusic() {
+          this.stopHappyEndingMusic();
+          // 시원한 변기 물내림 + 팡파르 + 행복한 오르골 멜로디 반복
+          const playMelodyLoop = () => {
+            // 경쾌하고 행복한 C장조 멜로디 (도미솔도 / 라솔미도 / 레파라솔 / 도~)
+            const melody = [
+              { f: 523.25, d: 0.22, t: 0.0 },  // 도
+              { f: 659.25, d: 0.22, t: 0.24 }, // 미
+              { f: 783.99, d: 0.22, t: 0.48 }, // 솔
+              { f: 1046.5, d: 0.40, t: 0.72 }, // 높은 도
+              { f: 880.00, d: 0.22, t: 1.20 }, // 라
+              { f: 783.99, d: 0.22, t: 1.44 }, // 솔
+              { f: 659.25, d: 0.35, t: 1.68 }, // 미
+              { f: 587.33, d: 0.22, t: 2.16 }, // 레
+              { f: 698.46, d: 0.22, t: 2.40 }, // 파
+              { f: 880.00, d: 0.22, t: 2.64 }, // 라
+              { f: 783.99, d: 0.45, t: 2.88 }, // 솔
+              { f: 659.25, d: 0.22, t: 3.45 }, // 미
+              { f: 587.33, d: 0.22, t: 3.69 }, // 레
+              { f: 523.25, d: 0.65, t: 3.93 }  // 도~
+            ];
+            melody.forEach(note => {
+              this.playTone(note.f, 'triangle', note.d + 0.08, 0.16, note.t);
+              this.playTone(note.f * 0.5, 'sine', note.d + 0.1, 0.10, note.t);
+            });
+          };
 
-                // 1. 뿡~ 방귀 소리
-                const fartOsc = this.ctx.createOscillator();
-                const fartGain = this.ctx.createGain();
-                fartOsc.type = 'sawtooth';
-                fartOsc.frequency.setValueAtTime(115, now);
-                fartOsc.frequency.exponentialRampToValueAtTime(48, now + 0.45);
-                fartGain.gain.setValueAtTime(0.4, now);
-                fartGain.gain.exponentialRampToValueAtTime(0.01, now + 0.48);
-                fartOsc.connect(fartGain);
-                fartGain.connect(this.ctx.destination);
-                fartOsc.start(now);
-                fartOsc.stop(now + 0.5);
-
-                // 2. 최난수 감독관 호루라기 삐이익~!
-                const whistleOsc = this.ctx.createOscillator();
-                const whistleGain = this.ctx.createGain();
-                whistleOsc.type = 'sine';
-                whistleOsc.frequency.setValueAtTime(2850, now + 0.45);
-                whistleOsc.frequency.setValueAtTime(3100, now + 0.6);
-                whistleOsc.frequency.setValueAtTime(2900, now + 0.75);
-                whistleGain.gain.setValueAtTime(0.2, now + 0.45);
-                whistleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
-                whistleOsc.connect(whistleGain);
-                whistleGain.connect(this.ctx.destination);
-                whistleOsc.start(now + 0.45);
-                whistleOsc.stop(now + 0.96);
-
-                // 3. 변발·돌배·물고기 단체 조롱 멜로디
-                const mockNotes = [587.33, 493.88, 587.33, 493.88, 440.00, 392.00];
-                mockNotes.forEach((freq, i) => {
-                    const t = now + 1.0 + i * 0.16;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, t);
-                    gain.gain.setValueAtTime(0.25, t);
-                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.14);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(t);
-                    osc.stop(t + 0.15);
-                });
-            } catch (e) {}
+          playMelodyLoop();
+          this.happyBgmTimer = setInterval(playMelodyLoop, 4800);
         }
 
-        playVictory() {
-            if (this.muted || !this.ctx) return;
-            try {
-                const fanfare = [523.25, 523.25, 523.25, 659.25, 783.99, 659.25, 1046.50];
-                const times = [0, 0.12, 0.24, 0.36, 0.52, 0.68, 0.85];
-                fanfare.forEach((freq, i) => {
-                    const now = this.ctx.currentTime + times[i];
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(freq, now);
-                    gain.gain.setValueAtTime(0.18, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.36);
-                });
-            } catch (e) {}
+        stopHappyEndingMusic() {
+          if (this.happyBgmTimer) {
+            clearInterval(this.happyBgmTimer);
+            this.happyBgmTimer = null;
+          }
         }
-    }
+      }
 
-    /**
-     * ============================================================================
-     * 2. 스테이지 데이터 및 게임 상태 정의
-     * ============================================================================
-     */
-    const STAGES = [
-        { level: 1, title: "야자 1교시", duration: 30, cursorSpeed: 85, safeWidth: 26, pressureRate: 5.8 },
-        { level: 2, title: "야자 2교시", duration: 45, cursorSpeed: 105, safeWidth: 23, pressureRate: 7.0 },
-        { level: 3, title: "야자 3교시", duration: 60, cursorSpeed: 125, safeWidth: 20, pressureRate: 8.2 },
-        { level: 4, title: "야자 4교시", duration: 75, cursorSpeed: 145, safeWidth: 17, pressureRate: 9.5 },
-        { level: 5, title: "야자 5교시 (최종)", duration: 90, cursorSpeed: 165, safeWidth: 15, pressureRate: 11.0 }
-    ];
+      const sound = new SoundManager();
 
-    const sound = new SoundManager();
+      // ==========================================
+      // 2. DOM 요소 및 게임 상태 변수
+      // ==========================================
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const mockCanvas = document.getElementById('mockCanvas');
+      const mockCtx = mockCanvas.getContext('2d');
+      const endingCanvas = document.getElementById('endingCanvas');
+      const endingCtx = endingCanvas.getContext('2d');
 
-    const state = {
-        status: 'START', // START, PLAYING, STAGE_CLEAR, GAMEOVER, ENDING
-        stageIdx: 0,
+      const stageLabel = document.getElementById('stageLabel');
+      const timerLabel = document.getElementById('timerLabel');
+      const hpBar = document.getElementById('hpBar');
+      const hpText = document.getElementById('hpText');
+      const pressureBar = document.getElementById('pressureBar');
+      const pressureText = document.getElementById('pressureText');
+      const greenZoneEl = document.getElementById('greenZone');
+      const cursorEl = document.getElementById('cursor');
+      const squeezeBtn = document.getElementById('squeezeBtn');
+      const feedbackBanner = document.getElementById('feedbackBanner');
+
+      const startOverlay = document.getElementById('startOverlay');
+      const stageClearOverlay = document.getElementById('stageClearOverlay');
+      const gameOverOverlay = document.getElementById('gameOverOverlay');
+      const endingOverlay = document.getElementById('endingOverlay');
+
+      const startBtn = document.getElementById('startBtn');
+      const nextStageBtn = document.getElementById('nextStageBtn');
+      const retryBtn = document.getElementById('retryBtn');
+      const playAgainBtn = document.getElementById('playAgainBtn');
+
+      const MAX_STAGES = 5;
+      let state = {
+        running: false,
+        stage: 1,
         timeLeft: 30,
-        maxHp: 100,
         hp: 100,
-        pressure: 20, // 0 ~ 100%
-        cursorPos: 15, // 0 ~ 100%
+        pressure: 15,
+        cursorPos: 0,
         cursorDir: 1,
-        safeStart: 37,
-        safeWidth: 26,
-        lastTime: 0,
-        animTime: 0,
-        heartbeatAccum: 0,
-        combo: 0,
-        sweatDrops: [],
-        floatingTexts: [],
-        teacherAlert: 0,
+        cursorSpeed: 65,
+        greenStart: 38,
+        greenWidth: 24,
+        pressureRate: 8.5,
+        shakeTime: 0,
         squeezeAnim: 0,
+        sweatParticles: [],
+        lastTime: 0,
+        heartbeatAcc: 0,
         cutsceneAnimId: null,
-        endingAnimId: null,
-        lockTimerId: null
-    };
+        retryUnlockTimer: null
+      };
 
-    // DOM 요소 참조
-    const wrapperEl = document.getElementById('game-wrapper');
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const stageDisplay = document.getElementById('stage-display');
-    const timerDisplay = document.getElementById('timer-display');
-    const hpText = document.getElementById('hp-text');
-    const hpBar = document.getElementById('hp-bar');
-    const pressureText = document.getElementById('pressure-text');
-    const pressureBar = document.getElementById('pressure-bar');
-    const cursorEl = document.getElementById('cursor');
-    const safeZoneEl = document.getElementById('safe-zone');
-    const warnZoneEl = document.getElementById('warn-zone');
-    const squeezeBtn = document.getElementById('squeeze-btn');
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
 
-    const startScreen = document.getElementById('start-screen');
-    const stageClearScreen = document.getElementById('stage-clear-screen');
-    const gameoverScreen = document.getElementById('gameover-screen');
-    const endingScreen = document.getElementById('ending-screen');
-
-    /**
-     * ============================================================================
-     * 3. 반응형 캔버스 리사이즈
-     * ============================================================================
-     */
-    function resizeCanvas() {
-        const container = document.getElementById('canvas-container');
-        if (!container) return;
-        const w = container.clientWidth || 360;
-        const h = container.clientHeight || 300;
-        if (canvas.width !== w || canvas.height !== h) {
-            canvas.width = w;
-            canvas.height = h;
-        }
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    /**
-     * ============================================================================
-     * 4. 게임 흐름 제어 함수
-     * ============================================================================
-     */
-    function stopAllCutsceneLoops() {
-        if (state.cutsceneAnimId) {
-            cancelAnimationFrame(state.cutsceneAnimId);
-            state.cutsceneAnimId = null;
-        }
-        if (state.endingAnimId) {
-            cancelAnimationFrame(state.endingAnimId);
-            state.endingAnimId = null;
-        }
-    }
-
-    function startNewGame() {
-        sound.init();
-        stopAllCutsceneLoops();
-        resizeCanvas();
-        state.stageIdx = 0;
-        state.hp = state.maxHp;
-        state.combo = 0;
-        setupStage(0);
-        hideAllOverlays();
-        state.status = 'PLAYING';
-        state.lastTime = performance.now();
-    }
-
-    /**
-     * 모바일 연타 오작동 방지를 위한 2.2초 버튼 잠금 유틸
-     */
-    function lockButtonWithCountdown(btnElement, labelText, lockSeconds = 2.2) {
-        if (state.lockTimerId) {
-            clearInterval(state.lockTimerId);
-            state.lockTimerId = null;
-        }
-        btnElement.disabled = true;
-        btnElement.style.pointerEvents = 'none';
-        let remaining = lockSeconds;
-        btnElement.textContent = `놀림 감상 중... (${remaining.toFixed(1)}초)`;
-
-        state.lockTimerId = setInterval(() => {
-            remaining -= 0.1;
-            if (remaining <= 0) {
-                clearInterval(state.lockTimerId);
-                state.lockTimerId = null;
-                btnElement.disabled = false;
-                btnElement.style.pointerEvents = 'auto';
-                btnElement.textContent = labelText;
-            } else {
-                btnElement.textContent = `잠시만요... (${remaining.toFixed(1)}초)`;
-            }
-        }, 100);
-    }
-
-    function setupStage(idx) {
-        const cfg = STAGES[idx];
-        state.stageIdx = idx;
-        state.timeLeft = cfg.duration;
-        state.pressure = 20;
+      // ==========================================
+      // 3. 스테이지 설정 및 게임 진행 로직
+      // ==========================================
+      function setupStage(stageNum) {
+        state.stage = stageNum;
+        // 1스테이지 30초, 이후 15초씩 증가 (30, 45, 60, 75, 90)
+        state.timeLeft = 30 + (stageNum - 1) * 15;
+        state.hp = 100;
+        state.pressure = 15;
         state.cursorPos = 10;
         state.cursorDir = 1;
-        state.safeWidth = cfg.safeWidth;
-        randomizeSafeZone();
-        state.sweatDrops = [];
-        state.floatingTexts = [];
-        state.teacherAlert = 0;
-        state.squeezeAnim = 0;
-        updateHUD();
-    }
-
-    function randomizeSafeZone() {
-        const margin = 14;
-        const maxStart = 100 - margin - state.safeWidth;
-        state.safeStart = margin + Math.random() * Math.max(1, maxStart - margin);
-
-        safeZoneEl.style.left = `${state.safeStart}%`;
-        safeZoneEl.style.width = `${state.safeWidth}%`;
-
-        const warnStart = Math.max(0, state.safeStart - 7);
-        const warnWidth = Math.min(100 - warnStart, state.safeWidth + 14);
-        warnZoneEl.style.left = `${warnStart}%`;
-        warnZoneEl.style.width = `${warnWidth}%`;
-    }
-
-    function hideAllOverlays() {
-        startScreen.classList.add('hidden');
-        stageClearScreen.classList.add('hidden');
-        gameoverScreen.classList.add('hidden');
-        endingScreen.classList.add('hidden');
-    }
-
-    function triggerSqueeze() {
-        if (state.status !== 'PLAYING') return;
-        sound.init();
-
-        squeezeBtn.classList.add('pressed');
-        setTimeout(() => squeezeBtn.classList.remove('pressed'), 120);
-
-        const safeEnd = state.safeStart + state.safeWidth;
-        // 관대한 판정 여유 (+-2.0%)
-        const isHit = (state.cursorPos >= state.safeStart - 2.0 && state.cursorPos <= safeEnd + 2.0);
-
-        if (isHit) {
-            sound.playSuccess();
-            state.combo += 1;
-            const reduction = 22 + Math.random() * 6; // 22% ~ 28% 감소
-            state.pressure = Math.max(4, state.pressure - reduction);
-            state.squeezeAnim = 1.0;
-
-            const comboStr = state.combo > 1 ? ` (${state.combo}연속 성공!)` : '';
-            addFloatingText(`쑥~! 밀어넣기 성공! -${Math.round(reduction)}%${comboStr}`, "#4ade80");
-            randomizeSafeZone();
-        } else {
-            sound.playFail();
-            state.combo = 0;
-            state.hp = Math.max(0, state.hp - 25); // 헛힘 시 괄약근 체력 25 감소
-            state.pressure = Math.min(100, state.pressure + 5);
-            state.teacherAlert = 1.0;
-
-            wrapperEl.classList.remove('shake-effect');
-            void wrapperEl.offsetWidth;
-            wrapperEl.classList.add('shake-effect');
-
-            for (let i = 0; i < 14; i++) {
-                state.sweatDrops.push({
-                    x: canvas.width * 0.5 + (Math.random() - 0.5) * 90,
-                    y: canvas.height * 0.55,
-                    vx: (Math.random() - 0.5) * 7,
-                    vy: -Math.random() * 5 - 2,
-                    life: 1.0
-                });
-            }
-
-            addFloatingText("으악! 헛힘줬다! 괄약근 -25", "#f87171");
-
-            if (state.hp <= 0) {
-                updateHUD();
-                triggerGameOver("괄약근 체력이 0이 되어 대참사가 발생했습니다!");
-                return;
-            }
-        }
-
-        updateHUD();
-    }
-
-    function addFloatingText(text, color) {
-        state.floatingTexts.push({
-            text,
-            color,
-            x: canvas.width * 0.5,
-            y: canvas.height * 0.42,
-            life: 1.0
-        });
-    }
-
-    function handleStageClear() {
-        if (state.stageIdx >= STAGES.length - 1) {
-            state.status = 'ENDING';
-            sound.playVictory();
-            hideAllOverlays();
-            endingScreen.classList.remove('hidden');
-            startEndingCutsceneLoop();
-        } else {
-            state.status = 'STAGE_CLEAR';
-            sound.playStageClear();
-            const clearedStage = STAGES[state.stageIdx];
-            const nextStage = STAGES[state.stageIdx + 1];
-
-            // 쉬는 시간 괄약근 체력 25 회복 (최대 100)
-            const prevHp = state.hp;
-            state.hp = Math.min(state.maxHp, state.hp + 25);
-            const recovered = state.hp - prevHp;
-            updateHUD();
-
-            document.getElementById('clear-title').textContent = `${clearedStage.title} 생존 성공!`;
-            document.getElementById('clear-subtitle').textContent = `휴... 일단 ${clearedStage.duration}초를 무사히 버텨냈다!`;
-            document.getElementById('clear-desc').innerHTML = `
-                잠깐의 쉬는 시간 동안 심호흡을 하며 괄약근을 정비했습니다.<br>
-                ${recovered > 0 ? `💪 <strong>괄약근 체력 +${recovered} 회복! (현재 ${state.hp}/100)</strong>` : '💪 <strong>괄약근 체력 100/100 만땅 유지 중!</strong>'}<br><br>
-                다음은 <strong>${nextStage.title} (${nextStage.duration}초)</strong>입니다! 긴장하세요!
-            `;
-
-            hideAllOverlays();
-            stageClearScreen.classList.remove('hidden');
-            lockButtonWithCountdown(document.getElementById('next-stage-btn'), '다음 교시 시작 ▶', 1.2);
-        }
-    }
-
-    function triggerGameOver(reason) {
-        if (state.status === 'GAMEOVER') return;
-        state.status = 'GAMEOVER';
-        sound.playGameOver();
-
-        const curStageNum = STAGES[state.stageIdx].level;
-        document.getElementById('gameover-reason').textContent = reason;
-        document.getElementById('mock-dialogue-box').innerHTML = `
-            <div><strong style="color:#fde047;">👮 최난수:</strong> "삐이익!! 거기 인간똥! 야자 시간에 무슨 짓이야! 당장 교실 밖으로 나가!"</div>
-            <div><strong style="color:#60a5fa;">💇 변발:</strong> "푸하하하! 야자 ${curStageNum}교시 째려다 바지에 지렸대요~!"</div>
-            <div><strong style="color:#a3e635;">🍐 돌배:</strong> "으악 냄새나! 인간똥이 진짜 똥 쌌다!!"</div>
-            <div><strong style="color:#38bdf8;">🐟 물고기:</strong> "뻐끔뻐끔~ 똥싸개 인간똥! 전교에 소문내자!"</div>
-        `;
-
-        hideAllOverlays();
-        gameoverScreen.classList.remove('hidden');
-
-        // 2.2초 쿨타임 후 재도전 버튼 활성화
-        const retryBtn = document.getElementById('retry-btn');
-        lockButtonWithCountdown(retryBtn, '다시 참아보기 (1교시부터 재도전) 🔄', 2.2);
-
-        startGameOverCutsceneLoop();
-    }
-
-    function updateHUD() {
-        const cfg = STAGES[state.stageIdx];
-        stageDisplay.textContent = `${cfg.title} (${cfg.level}/5)`;
-        timerDisplay.textContent = Math.max(0, state.timeLeft).toFixed(1);
-
-        const hpVal = Math.max(0, Math.round(state.hp));
-        hpText.textContent = `${hpVal} / ${state.maxHp}`;
-        hpBar.style.width = `${(hpVal / state.maxHp) * 100}%`;
-
-        const pVal = Math.min(100, Math.round(state.pressure));
-        pressureText.textContent = `${pVal}%`;
-        pressureBar.style.width = `${pVal}%`;
-    }
-
-    /**
-     * ============================================================================
-     * 5. 메인 게임 루프 (업데이트 및 효원고 야자 교실 렌더링)
-     * ============================================================================
-     */
-    function gameLoop(now) {
-        if (!state.lastTime) state.lastTime = now;
-        const dt = Math.min(0.05, (now - state.lastTime) / 1000);
-        state.lastTime = now;
-        state.animTime += dt;
-
-        if (state.status === 'PLAYING') {
-            updateGameplay(dt);
-        }
-
-        drawClassroomScene();
-        requestAnimationFrame(gameLoop);
-    }
-
-    function updateGameplay(dt) {
-        const cfg = STAGES[state.stageIdx];
-
-        // 1. 타이머 감소
-        state.timeLeft -= dt;
-        if (state.timeLeft <= 0) {
-            state.timeLeft = 0;
-            updateHUD();
-            handleStageClear();
-            return;
-        }
-
-        // 2. 응가 압력 자동 상승 (시간이 지날수록 차오름)
-        state.pressure += cfg.pressureRate * dt;
-        if (state.pressure >= 100) {
-            state.pressure = 100;
-            updateHUD();
-            triggerGameOver("응가 압력이 100% 한계를 돌파하여 바지에 지려버렸습니다!");
-            return;
-        }
-
-        // 3. 압력이 70% 이상일 때 긴장감 심장박동 효과음
-        if (state.pressure >= 70) {
-            state.heartbeatAccum += dt;
-            const beatInterval = state.pressure >= 85 ? 0.35 : 0.6;
-            if (state.heartbeatAccum >= beatInterval) {
-                state.heartbeatAccum = 0;
-                sound.playHeartbeat((state.pressure - 70) / 30);
-            }
-        }
-
-        // 4. 타이밍 게이지 커서 좌우 왕복
-        state.cursorPos += state.cursorDir * cfg.cursorSpeed * dt;
-        if (state.cursorPos >= 98) {
-            state.cursorPos = 98;
-            state.cursorDir = -1;
-        } else if (state.cursorPos <= 2) {
-            state.cursorPos = 2;
-            state.cursorDir = 1;
-        }
-        cursorEl.style.left = `${state.cursorPos}%`;
-
-        // 5. 애니메이션 감쇠 및 파티클 업데이트
-        if (state.squeezeAnim > 0) state.squeezeAnim = Math.max(0, state.squeezeAnim - dt * 2.5);
-        if (state.teacherAlert > 0) state.teacherAlert = Math.max(0, state.teacherAlert - dt * 1.2);
-
-        for (let i = state.sweatDrops.length - 1; i >= 0; i--) {
-            const d = state.sweatDrops[i];
-            d.x += d.vx;
-            d.y += d.vy;
-            d.vy += 0.25;
-            d.life -= dt * 1.5;
-            if (d.life <= 0) state.sweatDrops.splice(i, 1);
-        }
-
-        for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
-            const ft = state.floatingTexts[i];
-            ft.y -= 38 * dt;
-            ft.life -= dt * 1.1;
-            if (ft.life <= 0) state.floatingTexts.splice(i, 1);
-        }
-
-        updateHUD();
-    }
-
-    /**
-     * 효원고등학교 야간자율학습 교실 및 주인공 '인간똥' 캔버스 드로잉
-     */
-    function drawClassroomScene() {
-        resizeCanvas();
-        const w = canvas.width;
-        const h = canvas.height;
-        const t = state.animTime;
-
-        ctx.clearRect(0, 0, w, h);
-
-        // 1. 교실 벽면 & 야간 창문 (밤하늘과 초승달)
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(0, 0, w, h * 0.72);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(0, h * 0.58, w, h * 0.14); // 벽 하단 몰딩
-
-        // 교실 마룻바닥
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(0, h * 0.72, w, h * 0.28);
-
-        // 오른쪽 창문 (밤하늘과 달, 별)
-        const winW = Math.min(130, w * 0.24);
-        const winH = h * 0.36;
-        const winX = w - winW - 16;
-        const winY = h * 0.08;
-
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(winX, winY, winW, winH);
-        ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(winX, winY, winW, winH);
-        // 창틀 십자선
-        ctx.beginPath();
-        ctx.moveTo(winX + winW / 2, winY);
-        ctx.lineTo(winX + winW / 2, winY + winH);
-        ctx.moveTo(winX, winY + winH / 2);
-        ctx.lineTo(winX + winW, winY + winH / 2);
-        ctx.stroke();
-
-        // 밤하늘 초승달 & 별
-        ctx.fillStyle = '#fef08a';
-        ctx.beginPath();
-        ctx.arc(winX + winW * 0.3, winY + winH * 0.28, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.arc(winX + winW * 0.3 + 5, winY + winH * 0.28 - 3, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(winX + winW * 0.72, winY + winH * 0.22, 2, 2);
-        ctx.fillRect(winX + winW * 0.65, winY + winH * 0.68, 2, 2);
-
-        // 2. 중앙 대형 칠판: '효원고등학교 야간자율학습'
-        const boardX = 16;
-        const boardY = h * 0.07;
-        const boardW = Math.max(180, winX - 30);
-        const boardH = h * 0.38;
-
-        ctx.fillStyle = '#14532d';
-        ctx.fillRect(boardX, boardY, boardW, boardH);
-        ctx.strokeStyle = '#92400e';
-        ctx.lineWidth = 6;
-        ctx.strokeRect(boardX, boardY, boardW, boardH);
-
-        // 칠판 분필 글씨
-        ctx.fillStyle = '#f8fafc';
-        ctx.textAlign = 'center';
-        const titleFontSize = Math.max(13, Math.min(20, boardW * 0.055));
-        ctx.font = `bold ${titleFontSize}px Jua`;
-        ctx.fillText("🏫 효원고등학교 야간자율학습", boardX + boardW / 2, boardY + boardH * 0.34);
-
-        ctx.fillStyle = '#fde047';
-        const subFontSize = Math.max(11, Math.min(15, boardW * 0.042));
-        ctx.font = `${subFontSize}px Jua`;
-        ctx.fillText("※ 떠들지 말고 조용히 자습할 것! (화장실 금지)", boardX + boardW / 2, boardY + boardH * 0.62);
-
-        ctx.fillStyle = '#86efac';
-        ctx.font = `${Math.max(10, subFontSize - 2)}px Jua`;
-        ctx.fillText(`현재 감독관: 최난수 선생님 순찰 중 👀`, boardX + boardW / 2, boardY + boardH * 0.84);
-
-        // 3. 순찰 도는 감독관 최난수 선생님 실루엣 (의심 시 느낌표)
-        const patrolX = boardX + boardW * 0.5 + Math.sin(t * 1.1) * (boardW * 0.35);
-        const teacherY = h * 0.53;
-        ctx.save();
-        ctx.translate(patrolX, teacherY);
-        ctx.fillStyle = '#1e1b4b';
-        ctx.beginPath();
-        ctx.roundRect(-16, -24, 32, 42, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fed7aa';
-        ctx.beginPath();
-        ctx.arc(0, -34, 13, 0, Math.PI * 2);
-        ctx.fill();
-        // 뿔테 안경
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-9, -37, 7, 5);
-        ctx.strokeRect(2, -37, 7, 5);
-
-        if (state.teacherAlert > 0.1 || state.pressure > 80) {
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 18px Jua';
-            ctx.fillText("❗👀", 0, -54);
-        }
-        ctx.restore();
-
-        // 4. 주인공 '인간똥' & 교실 책상
-        const cx = w * 0.5;
-        const cy = h * 0.66;
-        const isDanger = state.pressure >= 70;
-        const isSqueezing = state.squeezeAnim > 0.1;
-
-        // 위험도에 따른 부들부들 떨림
-        const shakeAmt = isDanger ? ((state.pressure - 65) / 35) * 5 : 0.8;
-        const jitterX = Math.sin(t * 45) * shakeAmt;
-        const jitterY = Math.cos(t * 38) * (shakeAmt * 0.5);
-
-        ctx.save();
-        ctx.translate(cx + jitterX, cy + jitterY);
-
-        // 의자 등받이
-        ctx.fillStyle = '#b45309';
-        ctx.beginPath();
-        ctx.roundRect(-36, -15, 72, 45, 8);
-        ctx.fill();
-
-        // 교복 상의 몸통 (힘줄 때 살짝 위로 들썩)
-        const liftY = isSqueezing ? -8 * state.squeezeAnim : 0;
-        ctx.fillStyle = '#1e3a8a';
-        ctx.beginPath();
-        ctx.roundRect(-34, -12 + liftY, 68, 52, 14);
-        ctx.fill();
-        // 교복 넥타이
-        ctx.fillStyle = '#dc2626';
-        ctx.beginPath();
-        ctx.moveTo(0, -10 + liftY);
-        ctx.lineTo(-6, 12 + liftY);
-        ctx.lineTo(0, 22 + liftY);
-        ctx.lineTo(6, 12 + liftY);
-        ctx.closePath();
-        ctx.fill();
-
-        // 주인공 '인간똥' 머리 (압력이 높으면 시뻘게짐, 성공 시 황금빛 쾌감)
-        let poopColor = '#78350f';
-        if (isSqueezing) poopColor = '#d97706';
-        else if (state.pressure >= 80) poopColor = '#b91c1c';
-        else if (state.pressure >= 55) poopColor = '#9a3412';
-
-        ctx.fillStyle = poopColor;
-        ctx.strokeStyle = '#451a03';
-        ctx.lineWidth = 3;
-
-        // 똥 3단 또아리 모양
-        ctx.beginPath();
-        ctx.ellipse(0, -22 + liftY, 38, 16, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.ellipse(0, -38 + liftY, 28, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-14, -48 + liftY);
-        ctx.quadraticCurveTo(0, -72 + liftY, 15, -62 + liftY);
-        ctx.quadraticCurveTo(8, -52 + liftY, 18, -48 + liftY);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 표정 렌더링 (성공 쾌감 vs 극한 참기 vs 평상시)
-        if (isSqueezing) {
-            // 힘주기 성공 쾌감 표정 (^ o ^)
-            ctx.strokeStyle = '#fef08a';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-16, -34 + liftY); ctx.lineTo(-10, -40 + liftY); ctx.lineTo(-4, -34 + liftY);
-            ctx.moveTo(4, -34 + liftY); ctx.lineTo(10, -40 + liftY); ctx.lineTo(16, -34 + liftY);
-            ctx.stroke();
-
-            ctx.fillStyle = '#f43f5e';
-            ctx.beginPath();
-            ctx.arc(0, -22 + liftY, 7, 0, Math.PI);
-            ctx.fill();
-        } else if (isDanger) {
-            // 극한의 위기 표정 (> < & 이 악문 입)
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-16, -39); ctx.lineTo(-7, -34); ctx.lineTo(-16, -29);
-            ctx.moveTo(16, -39); ctx.lineTo(7, -34); ctx.lineTo(16, -29);
-            ctx.stroke();
-
-            // 이 악문 직사각형 입
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(-12, -24, 24, 8);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(-12, -24, 24, 8);
-            ctx.beginPath();
-            ctx.moveTo(-12, -20); ctx.lineTo(12, -20);
-            ctx.moveTo(-4, -24); ctx.lineTo(-4, -16);
-            ctx.moveTo(4, -24); ctx.lineTo(4, -16);
-            ctx.stroke();
-        } else {
-            // 평소 땀 흘리며 참는 표정
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(-10, -34, 5, 0, Math.PI * 2);
-            ctx.arc(10, -34, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#000000';
-            ctx.beginPath();
-            ctx.arc(-10, -34, 2.5, 0, Math.PI * 2);
-            ctx.arc(10, -34, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 삐질 흘러내리는 식은땀
-            const sweatY = -36 + ((t * 25) % 14);
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(24, sweatY, 3.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 떨리는 입
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.moveTo(-9, -21);
-            ctx.quadraticCurveTo(0, -25, 9, -21);
-            ctx.stroke();
-        }
-
-        // 앞 책상 & 교과서
-        ctx.fillStyle = '#d97706';
-        ctx.strokeStyle = '#78350f';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.roundRect(-68, 22, 136, 16, 5);
-        ctx.fill();
-        ctx.stroke();
-
-        // 책상 다리
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(-56, 38, 8, 45);
-        ctx.fillRect(48, 38, 8, 45);
-
-        // 책상 위 펼쳐진 야자 문제집
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(-26, 22);
-        ctx.lineTo(0, 18);
-        ctx.lineTo(26, 22);
-        ctx.lineTo(22, 26);
-        ctx.lineTo(-22, 26);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
-
-        // 5. 땀방울 파티클 렌더링
-        state.sweatDrops.forEach(d => {
-            ctx.fillStyle = `rgba(56, 189, 248, ${d.life})`;
-            ctx.beginPath();
-            ctx.arc(d.x, d.y, 4, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // 6. 플로팅 텍스트 렌더링
-        state.floatingTexts.forEach(ft => {
-            ctx.save();
-            ctx.globalAlpha = Math.max(0, ft.life);
-            ctx.font = 'bold 18px Jua';
-            ctx.textAlign = 'center';
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 4;
-            ctx.strokeText(ft.text, ft.x, ft.y);
-            ctx.fillStyle = ft.color;
-            ctx.fillText(ft.text, ft.x, ft.y);
-            ctx.restore();
-        });
-    }
-
-    /**
-     * ============================================================================
-     * 6. 게임 오버 컷신 애니메이션 (최난수 발각 + 변발, 돌배, 물고기 놀림)
-     * ============================================================================
-     */
-    function startGameOverCutsceneLoop() {
-        stopAllCutsceneLoops();
-        const startT = performance.now();
-
-        function renderLoop(now) {
-            if (state.status !== 'GAMEOVER') return;
-            const elapsed = (now - startT) / 1000;
-            drawGameOverCutscene(elapsed);
-            state.cutsceneAnimId = requestAnimationFrame(renderLoop);
-        }
-        state.cutsceneAnimId = requestAnimationFrame(renderLoop);
-    }
-
-    function drawGameOverCutscene(t) {
-        const c = document.getElementById('gameoverCanvas');
-        if (!c) return;
-        const g = c.getContext('2d');
-        const w = c.width;
-        const h = c.height;
-
-        g.clearRect(0, 0, w, h);
-
-        // 배경: 교실 복도
-        const bgGrad = g.createLinearGradient(0, 0, 0, h);
-        bgGrad.addColorStop(0, '#1e293b');
-        bgGrad.addColorStop(0.72, '#334155');
-        bgGrad.addColorStop(1, '#0f172a');
-        g.fillStyle = bgGrad;
-        g.fillRect(0, 0, w, h);
-
-        // 초반 경고 사이렌 섬광
-        if (t < 1.8) {
-            const flash = Math.abs(Math.sin(t * 10)) * 0.28;
-            g.fillStyle = `rgba(239, 68, 68, ${flash})`;
-            g.fillRect(0, 0, w, h);
-        }
-
-        // 왼쪽: 호루라기 불며 손가락질하는 감독관 '최난수' 선생님
-        const teacherBounce = Math.abs(Math.sin(t * 12)) * 5;
-        g.save();
-        g.translate(70, 130 - teacherBounce);
-
-        g.fillStyle = '#1e1b4b';
-        g.beginPath();
-        g.roundRect(-26, 10, 52, 62, 10);
-        g.fill();
-
-        const jab = Math.sin(t * 16) * 8;
-        g.strokeStyle = '#1e1b4b';
-        g.lineWidth = 11;
-        g.lineCap = 'round';
-        g.beginPath();
-        g.moveTo(16, 20);
-        g.lineTo(62 + jab, 8);
-        g.stroke();
-
-        g.fillStyle = '#fed7aa';
-        g.beginPath();
-        g.arc(66 + jab, 8, 5.5, 0, Math.PI * 2);
-        g.fill();
-
-        g.fillStyle = '#fed7aa';
-        g.beginPath();
-        g.arc(0, -12, 20, 0, Math.PI * 2);
-        g.fill();
-
-        g.strokeStyle = '#000';
-        g.lineWidth = 2.5;
-        g.strokeRect(-14, -17, 11, 7);
-        g.strokeRect(3, -17, 11, 7);
-
-        // 호루라기 & 음파
-        g.fillStyle = '#94a3b8';
-        g.fillRect(4, -2, 13, 6);
-        g.strokeStyle = '#fde047';
-        g.lineWidth = 2;
-        g.beginPath();
-        g.arc(22, 1, 5 + (t * 20) % 9, -0.5, 0.5);
-        g.stroke();
-
-        g.fillStyle = '#fde047';
-        g.font = 'bold 12px Jua';
-        g.textAlign = 'center';
-        g.fillText("👮 감독관 최난수", 0, -38);
-        g.restore();
-
-        // 중앙: 복도로 쫓겨나 좌절한 주인공 '인간똥'
-        const shiver = Math.sin(t * 35) * 3;
-        g.save();
-        g.translate(202 + shiver, 145);
-
-        // 구린내 연기 아우라
-        for (let i = 0; i < 5; i++) {
-            const smokeY = -((t * 32 + i * 16) % 68);
-            const smokeX = Math.sin(t * 4 + i) * 16;
-            const alpha = 1 - Math.abs(smokeY) / 68;
-            g.fillStyle = `rgba(132, 204, 22, ${alpha * 0.55})`;
-            g.beginPath();
-            g.arc(smokeX, 12 + smokeY, 11 + i * 2, 0, Math.PI * 2);
-            g.fill();
-        }
-
-        g.fillStyle = '#1e3a8a';
-        g.beginPath();
-        g.roundRect(-22, 12, 44, 42, 9);
-        g.fill();
-
-        g.fillStyle = '#991b1b';
-        g.strokeStyle = '#450a0a';
-        g.lineWidth = 2.5;
-        g.beginPath();
-        g.ellipse(0, 5, 24, 11, 0, 0, Math.PI * 2);
-        g.fill();
-        g.stroke();
-        g.beginPath();
-        g.ellipse(0, -6, 18, 9, 0, 0, Math.PI * 2);
-        g.fill();
-        g.stroke();
-        g.beginPath();
-        g.moveTo(-9, -11);
-        g.quadraticCurveTo(0, -26, 9, -20);
-        g.closePath();
-        g.fill();
-        g.stroke();
-
-        // 폭포 눈물
-        const tearLen = 14 + Math.sin(t * 20) * 4;
-        g.fillStyle = '#38bdf8';
-        g.fillRect(-12, -3, 4.5, tearLen);
-        g.fillRect(7.5, -3, 4.5, tearLen);
-
-        g.fillStyle = '#fca5a5';
-        g.font = 'bold 12px Jua';
-        g.textAlign = 'center';
-        g.fillText("인간똥 (대참사)", 0, 66);
-        g.restore();
-
-        // 오른쪽: 배꼽 잡고 구르며 손가락질하는 '변발', '돌배', '물고기' 3인방
-        const b1 = Math.abs(Math.sin(t * 14)) * 8;
-        const b2 = Math.abs(Math.sin(t * 14 + 1.2)) * 8;
-        const b3 = Math.abs(Math.sin(t * 14 + 2.4)) * 8;
-
-        drawMockingFriend(g, 318, 130 - b1, "변발", "#3b82f6", "queue", t);
-        drawMockingFriend(g, 384, 138 - b2, "돌배", "#10b981", "pear", t);
-        drawMockingFriend(g, 450, 130 - b3, "물고기", "#06b6d4", "fish", t);
-
-        // 상단 코믹 말풍선
-        const bubbleY = 14 + Math.sin(t * 10) * 2;
-        g.fillStyle = '#ffffff';
-        g.strokeStyle = '#ef4444';
-        g.lineWidth = 3;
-        g.beginPath();
-        g.roundRect(245, bubbleY, 240, 50, 12);
-        g.fill();
-        g.stroke();
-
-        g.fillStyle = '#dc2626';
-        g.font = 'bold 14px Jua';
-        g.textAlign = 'center';
-        g.fillText("푸하핫! 인간똥 똥쌌대요~!!", 365, bubbleY + 21);
-        g.fillStyle = '#111827';
-        g.font = 'bold 12px Jua';
-        g.fillText("전교에 소문내자~! 괄약근 파산 ㅋ", 365, bubbleY + 40);
-    }
-
-    function drawMockingFriend(g, x, y, name, color, type, t) {
-        g.save();
-        g.translate(x, y);
-
-        g.fillStyle = color;
-        g.beginPath();
-        g.roundRect(-15, 10, 30, 38, 8);
-        g.fill();
-
-        const pointX = -25 + Math.sin(t * 18) * 4;
-        g.strokeStyle = color;
-        g.lineWidth = 6.5;
-        g.lineCap = 'round';
-        g.beginPath();
-        g.moveTo(-11, 18);
-        g.lineTo(pointX, 12);
-        g.stroke();
-
-        if (type === "queue") {
-            g.fillStyle = '#fed7aa';
-            g.beginPath();
-            g.arc(0, -4, 14, 0, Math.PI * 2);
-            g.fill();
-            g.fillStyle = '#fff';
-            g.beginPath();
-            g.arc(-4, -12, 2.5, 0, Math.PI * 2);
-            g.fill();
-            const tailSwing = Math.sin(t * 15) * 6;
-            g.strokeStyle = '#111827';
-            g.lineWidth = 4;
-            g.beginPath();
-            g.moveTo(7, -15);
-            g.quadraticCurveTo(22 + tailSwing, -2, 16 + tailSwing, 20);
-            g.stroke();
-        } else if (type === "pear") {
-            g.fillStyle = '#bef264';
-            g.strokeStyle = '#4d7c0f';
-            g.lineWidth = 2;
-            g.beginPath();
-            g.arc(0, 1, 15, 0, Math.PI * 2);
-            g.arc(0, -10, 10, 0, Math.PI * 2);
-            g.fill();
-            g.stroke();
-            g.strokeStyle = '#713f12';
-            g.lineWidth = 2.5;
-            g.beginPath();
-            g.moveTo(0, -19);
-            g.lineTo(4, -26);
-            g.stroke();
-        } else {
-            g.fillStyle = '#38bdf8';
-            g.strokeStyle = '#0369a1';
-            g.lineWidth = 2;
-            g.beginPath();
-            g.ellipse(-2, -4, 16, 12, 0, 0, Math.PI * 2);
-            g.fill();
-            g.stroke();
-            g.beginPath();
-            g.moveTo(13, -4);
-            g.lineTo(23, -12);
-            g.lineTo(23, 4);
-            g.closePath();
-            g.fill();
-            g.stroke();
-        }
-
-        g.strokeStyle = '#000';
-        g.lineWidth = 2;
-        g.beginPath();
-        g.moveTo(-8, -6); g.lineTo(-4, -10); g.lineTo(0, -6);
-        g.moveTo(1, -6); g.lineTo(5, -10); g.lineTo(9, -6);
-        g.stroke();
-
-        const mouthOpen = 3.5 + Math.abs(Math.sin(t * 16)) * 2.5;
-        g.fillStyle = '#ef4444';
-        g.beginPath();
-        g.arc(0, 2, mouthOpen, 0, Math.PI);
-        g.fill();
-
-        g.fillStyle = '#fff';
-        g.font = 'bold 12px Jua';
-        g.textAlign = 'center';
-        g.fillText(name, 0, 62);
-        g.restore();
-    }
-
-    /**
-     * ============================================================================
-     * 7. 최종 엔딩 컷신 애니메이션 (황금빛 변기 위 극락의 해방)
-     * ============================================================================
-     */
-    function startEndingCutsceneLoop() {
-        stopAllCutsceneLoops();
-        const startT = performance.now();
-
-        function renderLoop(now) {
-            if (state.status !== 'ENDING') return;
-            const elapsed = (now - startT) / 1000;
-            drawEndingCutscene(elapsed);
-            state.endingAnimId = requestAnimationFrame(renderLoop);
-        }
-        state.endingAnimId = requestAnimationFrame(renderLoop);
-    }
-
-    function drawEndingCutscene(t) {
-        const c = document.getElementById('endingCanvas');
-        if (!c) return;
-        const g = c.getContext('2d');
-        const w = c.width;
-        const h = c.height;
-
-        g.clearRect(0, 0, w, h);
-
-        const grad = g.createRadialGradient(w / 2, h / 2, 15, w / 2, h / 2, 240);
-        grad.addColorStop(0, '#fef08a');
-        grad.addColorStop(0.5, '#f59e0b');
-        grad.addColorStop(1, '#78350f');
-        g.fillStyle = grad;
-        g.fillRect(0, 0, w, h);
-
-        // 회전하는 황금빛 후광 빛줄기
-        g.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-        g.lineWidth = 3;
-        for (let i = 0; i < 12; i++) {
-            const angle = (i / 12) * Math.PI * 2 + t * 0.6;
-            g.beginPath();
-            g.moveTo(w / 2 + Math.cos(angle) * 35, h / 2 + Math.sin(angle) * 35);
-            g.lineTo(w / 2 + Math.cos(angle) * 220, h / 2 + Math.sin(angle) * 220);
-            g.stroke();
-        }
-
-        // 황금빛 양변기
-        g.save();
-        g.translate(w / 2, 152);
-        g.fillStyle = '#fef9c3';
-        g.strokeStyle = '#ca8a04';
-        g.lineWidth = 3;
-        g.beginPath();
-        g.roundRect(-40, -50, 30, 60, 6);
-        g.fill();
-        g.stroke();
-
-        g.beginPath();
-        g.roundRect(-20, -4, 54, 28, 12);
-        g.fill();
-        g.stroke();
-
-        g.beginPath();
-        g.roundRect(-10, 20, 36, 34, 6);
-        g.fill();
-        g.stroke();
-
-        // 편안히 앉은 인간똥
-        const floatY = Math.sin(t * 4) * 2;
-        g.fillStyle = '#1e3a8a';
-        g.beginPath();
-        g.roundRect(-15, -42 + floatY, 36, 38, 10);
-        g.fill();
-
-        g.fillStyle = '#78350f';
-        g.strokeStyle = '#451a03';
-        g.lineWidth = 2.5;
-        g.beginPath();
-        g.ellipse(4, -48 + floatY, 26, 12, 0, 0, Math.PI * 2);
-        g.fill();
-        g.stroke();
-        g.beginPath();
-        g.ellipse(4, -60 + floatY, 20, 10, 0, 0, Math.PI * 2);
-        g.fill();
-        g.stroke();
-        g.beginPath();
-        g.moveTo(-7, -66 + floatY);
-        g.quadraticCurveTo(4, -84 + floatY, 13, -76 + floatY);
-        g.quadraticCurveTo(7, -69 + floatY, 15, -66 + floatY);
-        g.closePath();
-        g.fill();
-        g.stroke();
-
-        // 황홀한 표정
-        g.strokeStyle = '#fff';
-        g.lineWidth = 2.5;
-        g.beginPath();
-        g.arc(-4, -58 + floatY, 4.5, 0.1 * Math.PI, 0.9 * Math.PI);
-        g.stroke();
-        g.beginPath();
-        g.arc(12, -58 + floatY, 4.5, 0.1 * Math.PI, 0.9 * Math.PI);
-        g.stroke();
-
-        g.fillStyle = '#f43f5e';
-        g.beginPath();
-        g.arc(4, -48 + floatY, 5.5, 0, Math.PI);
-        g.fill();
-
-        // 천사 링
-        g.strokeStyle = '#fef08a';
-        g.lineWidth = 3;
-        g.beginPath();
-        g.ellipse(4, -90 + floatY, 16, 4.5, 0, 0, Math.PI * 2);
-        g.stroke();
-
-        g.restore();
-
-        g.fillStyle = '#111827';
-        g.font = 'bold 19px Jua';
-        g.textAlign = 'center';
-        g.fillText("✨ MISSION COMPLETE : 쾌변 대성공! ✨", w / 2, 30);
-    }
-
-    /**
-     * ============================================================================
-     * 8. 이벤트 핸들러 등록 (중복 실행 방지 및 모바일/PC 완벽 호환)
-     * ============================================================================
-     */
-    document.getElementById('start-btn').addEventListener('click', () => {
-        startNewGame();
-    });
-
-    document.getElementById('next-stage-btn').addEventListener('click', (e) => {
-        if (e.currentTarget.disabled) return;
-        sound.init();
-        setupStage(state.stageIdx + 1);
-        hideAllOverlays();
-        state.status = 'PLAYING';
-        state.lastTime = performance.now();
-    });
-
-    document.getElementById('retry-btn').addEventListener('click', (e) => {
-        if (e.currentTarget.disabled) return;
-        startNewGame();
-    });
-
-    document.getElementById('replay-btn').addEventListener('click', () => {
-        startNewGame();
-    });
-
-    // '엉덩이 힘주기!' 버튼: pointerdown 단일 핸들러로 즉각 반응 및 click 중복 차단
-    squeezeBtn.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        triggerSqueeze();
-    });
-    squeezeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-
-    // PC 키보드 스페이스바 조작
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') {
-            e.preventDefault();
-            if (state.status === 'PLAYING') {
-                triggerSqueeze();
-            }
-        }
-    });
-
-    // 사운드 음소거 토글
-    document.getElementById('sound-toggle').addEventListener('click', (e) => {
-        sound.init();
-        const isMuted = sound.toggleMute();
-        e.currentTarget.textContent = isMuted ? '🔇' : '🔊';
-    });
-
-    // 초기 캔버스 세팅 및 메인 루프 즉시 시작
-    resizeCanvas();
-    updateHUD();
-    state.lastTime = performance.now();
-    requestAnimationFrame(gameLoop);
-});
-</script>
-</body>
-</html>
+        state.cursorSpeed = 62 + (stageNum - 1) * 18;
+        state.greenWidth = Math.max(13, 25 - (stageNum
