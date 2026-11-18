@@ -10,6 +10,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
     }
     html, body {
       margin: 0;
@@ -29,6 +30,7 @@
       position: relative;
       width: 100%;
       max-width: 540px;
+      height: 100%;
       height: 100dvh;
       max-height: 860px;
       background: #1e293b;
@@ -44,6 +46,7 @@
       background: #0f172a;
       border-bottom: 2px solid #334155;
       z-index: 5;
+      flex-shrink: 0;
     }
     .hud-top {
       display: flex;
@@ -115,6 +118,7 @@
       position: relative;
       flex: 1;
       width: 100%;
+      min-height: 180px;
       overflow: hidden;
       background: #2b3a2e;
     }
@@ -125,13 +129,13 @@
     }
     #feedbackBanner {
       position: absolute;
-      top: 14px;
+      top: 12px;
       left: 50%;
       transform: translateX(-50%);
       padding: 6px 14px;
       border-radius: 999px;
       font-weight: 900;
-      font-size: 15px;
+      font-size: 14px;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.15s ease, transform 0.15s ease;
@@ -146,13 +150,14 @@
 
     /* 하단 타이밍 게이지 & 컨트롤 */
     #controls {
-      padding: 12px 16px 18px;
+      padding: 10px 16px 16px;
       background: #0f172a;
       border-top: 2px solid #334155;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       z-index: 5;
+      flex-shrink: 0;
     }
     .gauge-header {
       display: flex;
@@ -196,17 +201,16 @@
     }
     #squeezeBtn {
       width: 100%;
-      height: 64px;
+      height: 62px;
       border: none;
       border-radius: 14px;
       background: linear-gradient(180deg, #f97316, #c2410c);
       color: #fff;
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 900;
       letter-spacing: 0.5px;
       cursor: pointer;
       box-shadow: 0 6px 0 #7c2d12, 0 10px 20px rgba(0,0,0,0.45);
-      transition: transform 0.05s, box-shadow 0.05s;
       touch-action: manipulation;
     }
     #squeezeBtn:active, #squeezeBtn.pressed {
@@ -215,53 +219,56 @@
       background: linear-gradient(180deg, #ea580c, #9a3412);
     }
 
-    /* 오버레이 화면 (시작, 스테이지 클리어, 패배 놀림, 최종 엔딩) */
+    /* 오버레이 화면 */
     .overlay {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.94);
+      background: rgba(15, 23, 42, 0.96);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 18px;
       text-align: center;
-      z-index: 20;
+      z-index: 30;
+      overflow-y: auto;
     }
     .overlay.hidden {
-      display: none;
+      display: none !important;
+      pointer-events: none;
     }
     .overlay h1 {
-      margin: 0 0 8px;
-      font-size: 30px;
+      margin: 0 0 6px;
+      font-size: 28px;
       color: #fbbf24;
       text-shadow: 0 3px 0 #78350f;
     }
     .overlay h2 {
-      margin: 0 0 8px;
-      font-size: 25px;
+      margin: 0 0 6px;
+      font-size: 23px;
       color: #f87171;
     }
     .overlay p {
-      margin: 6px 0;
+      margin: 5px 0;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.45;
       color: #e2e8f0;
       max-width: 420px;
     }
     .cutscene-canvas {
       width: 100%;
-      max-width: 420px;
-      height: 250px;
+      max-width: 400px;
+      height: 220px;
       border-radius: 14px;
       border: 3px solid #475569;
       background: #1e293b;
-      margin: 10px 0 12px;
+      margin: 8px 0 10px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     .action-btn {
       margin-top: 8px;
-      padding: 14px 28px;
+      padding: 15px 28px;
+      min-height: 52px;
       font-size: 18px;
       font-weight: 900;
       color: #0f172a;
@@ -271,6 +278,8 @@
       cursor: pointer;
       box-shadow: 0 5px 0 #a16207;
       touch-action: manipulation;
+      position: relative;
+      z-index: 35;
     }
     .action-btn:disabled {
       opacity: 0.45;
@@ -283,26 +292,20 @@
       border: 1px solid #334155;
       border-radius: 12px;
       padding: 12px 14px;
-      margin: 10px 0;
+      margin: 8px 0;
       text-align: left;
       font-size: 13px;
-      line-height: 1.55;
+      line-height: 1.5;
       color: #cbd5e1;
       width: 100%;
       max-width: 400px;
     }
-    .rule-box strong {
-      color: #4ade80;
-    }
-    .rule-box .warn {
-      color: #f87171;
-      font-weight: 700;
-    }
+    .rule-box strong { color: #4ade80; }
+    .rule-box .warn { color: #f87171; font-weight: 700; }
   </style>
 </head>
 <body>
   <div id="app">
-    <!-- 상단 상태 표시줄 -->
     <div id="hud">
       <div class="hud-top">
         <span class="stage-badge" id="stageLabel">야자 1교시 / 5교시</span>
@@ -330,23 +333,21 @@
       </div>
     </div>
 
-    <!-- 메인 교실 캔버스 -->
     <div id="canvasWrap">
       <canvas id="gameCanvas"></canvas>
       <div id="feedbackBanner">나이스! 쏙 들어갔다!</div>
     </div>
 
-    <!-- 하단 게이지 & 버튼 -->
     <div id="controls">
       <div class="gauge-header">
         <span>🟢 초록 구간에서 힘주기!</span>
-        <span>❌ 빨간 구간 헛힘 = 괄약근 체력 -25</span>
+        <span>❌ 빨간 구간 헛힘 = 체력 -25</span>
       </div>
       <div id="timingTrack">
         <div id="greenZone"></div>
         <div id="cursor"></div>
       </div>
-      <button id="squeezeBtn" type="button">🔥 엉덩이 힘주기! (SPACE)</button>
+      <button id="squeezeBtn" type="button">🔥 엉덩이 힘주기! (터치/SPACE)</button>
     </div>
 
     <!-- 1. 시작 화면 -->
@@ -355,7 +356,6 @@
       <p style="color:#93c5fd; font-weight:700;">배경: 효원고등학교 야간자율학습 교실</p>
       <div class="rule-box">
         • 야자 1교시(30초)부터 5교시(90초)까지 총 5스테이지!<br/>
-        • 시간이 지날수록 <strong>밀려나오는 압력</strong>이 점점 차오릅니다.<br/>
         • 움직이는 게이지의 <strong>초록색 구역</strong>에서 버튼을 눌러 똥을 밀어 넣으세요!<br/>
         • <span class="warn">빨간 구역에서 헛힘을 주면 괄약근 체력이 소진</span>되며, 체력이 0이 되면 <strong>최난수</strong> 선생님에게 발각되어 <strong>변발·돌배·물고기</strong>에게 평생 놀림받습니다!
       </div>
@@ -365,7 +365,7 @@
     <!-- 2. 스테이지 클리어 화면 -->
     <div class="overlay hidden" id="stageClearOverlay">
       <h1 style="color:#4ade80;" id="clearTitle">야자 1교시 생존 성공!</h1>
-      <p id="clearDesc">휴... 고비를 넘겼다! 하지만 다음 교시는 15초 더 길어진다!</p>
+      <p id="clearDesc">휴... 고비를 넘겼다! 다음 교시는 15초 더 길어진다!</p>
       <button class="action-btn" id="nextStageBtn" type="button">다음 교시 버티기</button>
     </div>
 
@@ -373,7 +373,7 @@
     <div class="overlay hidden" id="gameOverOverlay">
       <h2>🚨 최난수 감독관에게 발각!! 🚨</h2>
       <p id="failReasonText" style="color:#fca5a5; font-weight:700;">괄약근 체력이 0이 되어 교실에서 쫓겨났습니다!</p>
-      <canvas class="cutscene-canvas" id="mockCanvas" width="420" height="250"></canvas>
+      <canvas class="cutscene-canvas" id="mockCanvas" width="400" height="220"></canvas>
       <p style="font-size:13px; color:#fde047; font-weight:700;">
         변발·돌배·물고기: "으악! 효원고 인간똥 쌌대요~! 똥쟁이~!!"
       </p>
@@ -383,8 +383,8 @@
     <!-- 4. 최종 5스테이지 클리어 행복한 엔딩 화면 -->
     <div class="overlay hidden" id="endingOverlay">
       <h1 style="color:#fde047;">🎉 야자 5교시 완전 정복! 🎉</h1>
-      <p style="color:#86efac; font-weight:700;">집에 무사히 도착한 인간똥, 드디어 화장실 변기에서 해방되다!</p>
-      <canvas class="cutscene-canvas" id="endingCanvas" width="420" height="250"></canvas>
+      <p style="color:#86efac; font-weight:700;">집에 무사히 도착한 인간똥, 화장실 변기에서 해방되다!</p>
+      <canvas class="cutscene-canvas" id="endingCanvas" width="400" height="220"></canvas>
       <p style="font-size:14px; color:#fef08a; font-weight:700;">
         "아~ 살았다!! 세상에서 제일 행복한 순간이야~♪"
       </p>
@@ -393,16 +393,42 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // ==========================================
-      // 1. Web Audio API 효과음 및 행복한 엔딩 BGM
-      // ==========================================
+    (function () {
+      // 모든 브라우저 호환용 둥근 사각형 헬퍼 (구형 모바일 사파리/웹뷰 방어)
+      function drawRoundedBox(ctx, x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      // 모바일 안전 버튼 바인딩 (터치와 클릭이 동시에 2번 실행되거나 씹히는 현상 방지)
+      function bindTap(el, handler) {
+        if (!el) return;
+        let lastTap = 0;
+        const trigger = (e) => {
+          if (el.disabled) return;
+          const now = Date.now();
+          if (now - lastTap < 300) return;
+          lastTap = now;
+          if (e && e.cancelable) e.preventDefault();
+          handler(e);
+        };
+        el.addEventListener('touchstart', trigger, { passive: false });
+        el.addEventListener('click', trigger);
+      }
+
+      // Web Audio API 사운드 매니저 (실패해도 게임에 전혀 지장 없도록 격리)
       class SoundManager {
         constructor() {
           this.ctx = null;
           this.happyBgmTimer = null;
         }
-
         init() {
           try {
             if (!this.ctx) {
@@ -410,11 +436,10 @@
               if (AudioCtx) this.ctx = new AudioCtx();
             }
             if (this.ctx && this.ctx.state === 'suspended') {
-              this.ctx.resume();
+              this.ctx.resume().catch(() => {});
             }
           } catch (e) {}
         }
-
         playTone(freq, type, duration, vol = 0.15, delay = 0) {
           try {
             this.init();
@@ -432,63 +457,52 @@
             osc.stop(now + duration);
           } catch (e) {}
         }
-
         playSuccess() {
           this.playTone(523.25, 'sine', 0.12, 0.18, 0);
           this.playTone(783.99, 'triangle', 0.18, 0.18, 0.07);
         }
-
         playFailHit() {
           this.playTone(140, 'sawtooth', 0.22, 0.22, 0);
           this.playTone(95, 'square', 0.25, 0.2, 0.08);
         }
-
         playHeartbeat() {
           this.playTone(72, 'sine', 0.12, 0.2, 0);
           this.playTone(62, 'sine', 0.15, 0.15, 0.14);
         }
-
         playGameOverMock() {
-          // 호루라기 + 비웃음 효과음
           this.playTone(2600, 'sine', 0.18, 0.18, 0);
           this.playTone(2800, 'sine', 0.28, 0.18, 0.2);
-          const notes = [440, 392, 349.23, 329.63, 293.66];
-          notes.forEach((n, idx) => {
+          [440, 392, 349.23, 329.63, 293.66].forEach((n, idx) => {
             this.playTone(n, 'sawtooth', 0.2, 0.14, 0.55 + idx * 0.18);
           });
         }
-
         startHappyEndingMusic() {
           this.stopHappyEndingMusic();
-          // 시원한 변기 물내림 + 팡파르 + 행복한 오르골 멜로디 반복
           const playMelodyLoop = () => {
-            // 경쾌하고 행복한 C장조 멜로디 (도미솔도 / 라솔미도 / 레파라솔 / 도~)
             const melody = [
-              { f: 523.25, d: 0.22, t: 0.0 },  // 도
-              { f: 659.25, d: 0.22, t: 0.24 }, // 미
-              { f: 783.99, d: 0.22, t: 0.48 }, // 솔
-              { f: 1046.5, d: 0.40, t: 0.72 }, // 높은 도
-              { f: 880.00, d: 0.22, t: 1.20 }, // 라
-              { f: 783.99, d: 0.22, t: 1.44 }, // 솔
-              { f: 659.25, d: 0.35, t: 1.68 }, // 미
-              { f: 587.33, d: 0.22, t: 2.16 }, // 레
-              { f: 698.46, d: 0.22, t: 2.40 }, // 파
-              { f: 880.00, d: 0.22, t: 2.64 }, // 라
-              { f: 783.99, d: 0.45, t: 2.88 }, // 솔
-              { f: 659.25, d: 0.22, t: 3.45 }, // 미
-              { f: 587.33, d: 0.22, t: 3.69 }, // 레
-              { f: 523.25, d: 0.65, t: 3.93 }  // 도~
+              { f: 523.25, d: 0.22, t: 0.0 },
+              { f: 659.25, d: 0.22, t: 0.24 },
+              { f: 783.99, d: 0.22, t: 0.48 },
+              { f: 1046.5, d: 0.40, t: 0.72 },
+              { f: 880.00, d: 0.22, t: 1.20 },
+              { f: 783.99, d: 0.22, t: 1.44 },
+              { f: 659.25, d: 0.35, t: 1.68 },
+              { f: 587.33, d: 0.22, t: 2.16 },
+              { f: 698.46, d: 0.22, t: 2.40 },
+              { f: 880.00, d: 0.22, t: 2.64 },
+              { f: 783.99, d: 0.45, t: 2.88 },
+              { f: 659.25, d: 0.22, t: 3.45 },
+              { f: 587.33, d: 0.22, t: 3.69 },
+              { f: 523.25, d: 0.65, t: 3.93 }
             ];
-            melody.forEach(note => {
+            melody.forEach((note) => {
               this.playTone(note.f, 'triangle', note.d + 0.08, 0.16, note.t);
               this.playTone(note.f * 0.5, 'sine', note.d + 0.1, 0.10, note.t);
             });
           };
-
           playMelodyLoop();
           this.happyBgmTimer = setInterval(playMelodyLoop, 4800);
         }
-
         stopHappyEndingMusic() {
           if (this.happyBgmTimer) {
             clearInterval(this.happyBgmTimer);
@@ -499,9 +513,6 @@
 
       const sound = new SoundManager();
 
-      // ==========================================
-      // 2. DOM 요소 및 게임 상태 변수
-      // ==========================================
       const canvas = document.getElementById('gameCanvas');
       const ctx = canvas.getContext('2d');
       const mockCanvas = document.getElementById('mockCanvas');
@@ -531,7 +542,7 @@
       const playAgainBtn = document.getElementById('playAgainBtn');
 
       const MAX_STAGES = 5;
-      let state = {
+      const state = {
         running: false,
         stage: 1,
         timeLeft: 30,
@@ -554,22 +565,670 @@
 
       function resizeCanvas() {
         const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+        canvas.width = Math.max(300, Math.floor(rect.width));
+        canvas.height = Math.max(200, Math.floor(rect.height));
       }
       window.addEventListener('resize', resizeCanvas);
       resizeCanvas();
 
-      // ==========================================
-      // 3. 스테이지 설정 및 게임 진행 로직
-      // ==========================================
       function setupStage(stageNum) {
         state.stage = stageNum;
-        // 1스테이지 30초, 이후 15초씩 증가 (30, 45, 60, 75, 90)
         state.timeLeft = 30 + (stageNum - 1) * 15;
         state.hp = 100;
         state.pressure = 15;
         state.cursorPos = 10;
         state.cursorDir = 1;
         state.cursorSpeed = 62 + (stageNum - 1) * 18;
-        state.greenWidth = Math.max(13, 25 - (stageNum
+        state.greenWidth = Math.max(13, 25 - (stageNum - 1) * 2.5);
+        state.greenStart = 35;
+        state.pressureRate = 8.2 + (stageNum - 1) * 2.1;
+        state.shakeTime = 0;
+        state.squeezeAnim = 0;
+        state.sweatParticles = [];
+        greenZoneEl.style.left = state.greenStart + '%';
+        greenZoneEl.style.width = state.greenWidth + '%';
+        updateHUD();
+      }
+
+      function randomizeGreenZone() {
+        const min = 8;
+        const max = 92 - state.greenWidth;
+        state.greenStart = min + Math.random() * (max - min);
+        greenZoneEl.style.left = state.greenStart + '%';
+        greenZoneEl.style.width = state.greenWidth + '%';
+      }
+
+      function showFeedback(text, isGood) {
+        feedbackBanner.textContent = text;
+        feedbackBanner.style.background = isGood ? '#16a34a' : '#dc2626';
+        feedbackBanner.style.color = '#ffffff';
+        feedbackBanner.classList.add('show');
+        clearTimeout(feedbackBanner._timer);
+        feedbackBanner._timer = setTimeout(() => {
+          feedbackBanner.classList.remove('show');
+        }, 650);
+      }
+
+      function spawnSweat(count) {
+        const cx = canvas.width * 0.5;
+        const cy = canvas.height * 0.55;
+        for (let i = 0; i < count; i++) {
+          const angle = -Math.PI * (0.15 + Math.random() * 0.7);
+          const speed = 70 + Math.random() * 120;
+          state.sweatParticles.push({
+            x: cx + (Math.random() - 0.5) * 60,
+            y: cy - 30 + (Math.random() - 0.5) * 40,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.7 + Math.random() * 0.3
+          });
+        }
+      }
+
+      function handleSqueeze() {
+        if (!state.running) return;
+        sound.init();
+        squeezeBtn.classList.add('pressed');
+        setTimeout(() => squeezeBtn.classList.remove('pressed'), 90);
+
+        const inGreen =
+          state.cursorPos >= state.greenStart - 1.5 &&
+          state.cursorPos <= state.greenStart + state.greenWidth + 1.5;
+
+        if (inGreen) {
+          sound.playSuccess();
+          state.pressure = Math.max(0, state.pressure - 24);
+          state.squeezeAnim = 0.35;
+          showFeedback('💪 끄응!! 똥을 다시 밀어 넣었다!', true);
+          randomizeGreenZone();
+        } else {
+          sound.playFailHit();
+          state.hp = Math.max(0, state.hp - 25);
+          state.pressure = Math.min(100, state.pressure + 8);
+          state.shakeTime = 0.35;
+          spawnSweat(10);
+          showFeedback('💥 헛힘 줬다!! 괄약근 체력 -25!', false);
+          if (state.hp <= 0) {
+            triggerGameOver('괄약근 체력이 0이 되어 힘을 풀고 말았습니다!');
+            return;
+          }
+        }
+
+        if (state.pressure >= 100) {
+          triggerGameOver('밀려 나오는 압력을 이기지 못하고 결국 지려버렸습니다!');
+          return;
+        }
+        updateHUD();
+      }
+
+      function updateHUD() {
+        stageLabel.textContent = `야자 ${state.stage}교시 / ${MAX_STAGES}교시`;
+        timerLabel.textContent = `${Math.max(0, state.timeLeft).toFixed(1)}초`;
+        timerLabel.classList.toggle('urgent', state.timeLeft <= 7);
+        hpBar.style.width = `${state.hp}%`;
+        hpText.textContent = `${Math.ceil(state.hp)}%`;
+        pressureBar.style.width = `${Math.min(100, state.pressure)}%`;
+        pressureText.textContent = `${Math.floor(state.pressure)}%`;
+      }
+
+      function drawClassroomScene(dt) {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.save();
+
+        if (state.shakeTime > 0 || state.pressure > 75) {
+          const mag = state.shakeTime > 0 ? 7 : (state.pressure - 75) * 0.14;
+          ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+        }
+
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, 0, w, h);
+
+        const boardW = w * 0.84;
+        const boardH = h * 0.30;
+        const boardX = (w - boardW) / 2;
+        const boardY = h * 0.06;
+        ctx.fillStyle = '#14532d';
+        ctx.fillRect(boardX, boardY, boardW, boardH);
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(boardX, boardY, boardW, boardH);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        ctx.font = 'bold 14px Malgun Gothic, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('효원고등학교 야간자율학습', w / 2, boardY + 26);
+        ctx.font = '12px Malgun Gothic, sans-serif';
+        ctx.fillStyle = '#fde047';
+        ctx.fillText(`급훈: 괄약근은 배신하지 않는다 (${state.stage}교시)`, w / 2, boardY + 48);
+
+        const patrolX = w / 2 + Math.sin(Date.now() * 0.0018) * (boardW * 0.32);
+        const patrolY = boardY + boardH - 12;
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(patrolX, patrolY - 22, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(patrolX - 16, patrolY - 8, 32, 22);
+        ctx.fillStyle = '#f87171';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText('감독: 최난수', patrolX, patrolY - 40);
+
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(0, h * 0.68, w, h * 0.32);
+
+        const cx = w / 2;
+        const cy = h * 0.62;
+
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(cx - 42, cy - 45, 84, 55);
+
+        if (state.pressure > 55) {
+          const alpha = ((state.pressure - 55) / 45) * 0.45;
+          const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 120);
+          grad.addColorStop(0, `rgba(220, 38, 38, ${alpha})`);
+          grad.addColorStop(1, 'rgba(220, 38, 38, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 120, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const squeezeScaleX =
+          state.squeezeAnim > 0
+            ? 0.88
+            : 1 + Math.sin(Date.now() * 0.025) * (state.pressure * 0.0008);
+        const squeezeScaleY = state.squeezeAnim > 0 ? 1.12 : 1;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(squeezeScaleX, squeezeScaleY);
+
+        ctx.fillStyle = '#713f12';
+        ctx.beginPath();
+        ctx.ellipse(0, -18, 44, 24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(0, -42, 33, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(0, -62, 20, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-8, -72);
+        ctx.quadraticCurveTo(6, -88, 12, -70);
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        drawRoundedBox(ctx, -38, 2, 76, 48, 10);
+        ctx.fill();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(-12, 2);
+        ctx.lineTo(12, 2);
+        ctx.lineTo(0, 24);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(-3, 8, 6, 24);
+
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-22, -44);
+        ctx.lineTo(-10, -38);
+        ctx.lineTo(-22, -32);
+        ctx.moveTo(22, -44);
+        ctx.lineTo(10, -38);
+        ctx.lineTo(22, -32);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.ellipse(0, -20, 12, 6 + state.pressure * 0.05, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(26, -50, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(cx - 75, cy + 32, 150, 16);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(cx - 65, cy + 48, 12, 55);
+        ctx.fillRect(cx + 53, cy + 48, 12, 55);
+
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillRect(cx - 35, cy + 24, 70, 8);
+
+        for (let i = state.sweatParticles.length - 1; i >= 0; i--) {
+          const p = state.sweatParticles[i];
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 260 * dt;
+          p.life -= dt;
+          if (p.life <= 0) {
+            state.sweatParticles.splice(i, 1);
+            continue;
+          }
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        drawRoundedBox(ctx, cx - 110, cy - 120, 220, 26, 13);
+        ctx.fill();
+        ctx.fillStyle = state.pressure > 70 ? '#fca5a5' : '#fde047';
+        ctx.font = 'bold 12px Malgun Gothic, sans-serif';
+        ctx.textAlign = 'center';
+        const statusMsg =
+          state.pressure > 80
+            ? '으아악!! 문 열리기 직전이다!!'
+            : state.pressure > 50
+            ? '끄응... 신호가 점점 강해진다...'
+            : '후우... 아직은 버틸 만하다...';
+        ctx.fillText(statusMsg, cx, cy - 103);
+
+        ctx.restore();
+      }
+
+      function gameLoop(timestamp) {
+        if (!state.running) return;
+        if (!state.lastTime) state.lastTime = timestamp;
+        const dt = Math.min(0.05, (timestamp - state.lastTime) / 1000);
+        state.lastTime = timestamp;
+
+        state.timeLeft -= dt;
+        if (state.timeLeft <= 0) {
+          state.timeLeft = 0;
+          updateHUD();
+          handleStageClear();
+          return;
+        }
+
+        state.cursorPos += state.cursorDir * state.cursorSpeed * dt;
+        if (state.cursorPos >= 100) {
+          state.cursorPos = 100;
+          state.cursorDir = -1;
+        } else if (state.cursorPos <= 0) {
+          state.cursorPos = 0;
+          state.cursorDir = 1;
+        }
+        cursorEl.style.left = state.cursorPos + '%';
+
+        state.pressure += state.pressureRate * dt;
+        if (state.pressure >= 100) {
+          state.pressure = 100;
+          updateHUD();
+          triggerGameOver('압력이 100%를 돌파해 교실에 대참사가 일어났습니다!');
+          return;
+        }
+
+        if (state.pressure > 72) {
+          state.heartbeatAcc += dt;
+          if (state.heartbeatAcc >= 0.7) {
+            state.heartbeatAcc = 0;
+            sound.playHeartbeat();
+          }
+        }
+
+        if (state.shakeTime > 0) state.shakeTime -= dt;
+        if (state.squeezeAnim > 0) state.squeezeAnim -= dt;
+
+        updateHUD();
+        drawClassroomScene(dt);
+        requestAnimationFrame(gameLoop);
+      }
+
+      function stopCutsceneAnim() {
+        if (state.cutsceneAnimId) {
+          cancelAnimationFrame(state.cutsceneAnimId);
+          state.cutsceneAnimId = null;
+        }
+      }
+
+      function handleStageClear() {
+        state.running = false;
+        if (state.stage < MAX_STAGES) {
+          sound.playSuccess();
+          const nextTime = 30 + state.stage * 15;
+          document.getElementById('clearTitle').textContent = `야자 ${state.stage}교시 생존 성공!`;
+          document.getElementById('clearDesc').textContent =
+            `휴... 고비를 넘겼다! 다음 ${state.stage + 1}교시는 ${nextTime}초 동안 참아야 한다!`;
+          nextStageBtn.textContent = `야자 ${state.stage + 1}교시 시작 (${nextTime}초)`;
+          stageClearOverlay.classList.remove('hidden');
+        } else {
+          triggerHappyEnding();
+        }
+      }
+
+      function triggerGameOver(reason) {
+        state.running = false;
+        sound.playGameOverMock();
+        document.getElementById('failReasonText').textContent = reason;
+        gameOverOverlay.classList.remove('hidden');
+
+        clearTimeout(state.retryUnlockTimer);
+        retryBtn.disabled = true;
+        retryBtn.textContent = '놀림 받는 중... (2초)';
+        state.retryUnlockTimer = setTimeout(() => {
+          retryBtn.disabled = false;
+          retryBtn.textContent = '1교시부터 다시 도전하기';
+        }, 2200);
+
+        stopCutsceneAnim();
+        const startT = Date.now();
+        function renderMockScene() {
+          const t = (Date.now() - startT) / 1000;
+          const w = mockCanvas.width;
+          const h = mockCanvas.height;
+          mockCtx.clearRect(0, 0, w, h);
+
+          mockCtx.fillStyle = '#1e293b';
+          mockCtx.fillRect(0, 0, w, h * 0.72);
+          mockCtx.fillStyle = '#334155';
+          mockCtx.fillRect(0, h * 0.72, w, h * 0.28);
+
+          const teacherX = 68;
+          const teacherY = 148;
+          mockCtx.fillStyle = '#0f172a';
+          mockCtx.fillRect(teacherX - 18, teacherY - 36, 36, 50);
+          mockCtx.fillStyle = '#fed7aa';
+          mockCtx.beginPath();
+          mockCtx.arc(teacherX, teacherY - 50, 16, 0, Math.PI * 2);
+          mockCtx.fill();
+          mockCtx.strokeStyle = '#0f172a';
+          mockCtx.lineWidth = 7;
+          mockCtx.beginPath();
+          mockCtx.moveTo(teacherX + 14, teacherY - 22);
+          mockCtx.lineTo(teacherX + 48, teacherY - 28 + Math.sin(t * 14) * 4);
+          mockCtx.stroke();
+          mockCtx.fillStyle = '#f87171';
+          mockCtx.font = 'bold 11px Malgun Gothic, sans-serif';
+          mockCtx.textAlign = 'center';
+          mockCtx.fillText('최난수 감독관', teacherX, teacherY - 74);
+          mockCtx.fillStyle = '#fef08a';
+          mockCtx.fillText('"당장 복도로 나가!!"', teacherX + 12, teacherY - 90);
+
+          const poopX = 175;
+          const poopY = 160 + Math.abs(Math.sin(t * 8)) * 4;
+          mockCtx.fillStyle = '#713f12';
+          mockCtx.beginPath();
+          mockCtx.ellipse(poopX, poopY - 12, 24, 14, 0, 0, Math.PI * 2);
+          mockCtx.fill();
+          mockCtx.beginPath();
+          mockCtx.ellipse(poopX, poopY - 26, 17, 11, 0, 0, Math.PI * 2);
+          mockCtx.fill();
+          mockCtx.fillStyle = 'rgba(163, 230, 53, 0.55)';
+          mockCtx.beginPath();
+          mockCtx.arc(poopX - 24, poopY - 8 + Math.sin(t * 5) * 6, 11, 0, Math.PI * 2);
+          mockCtx.fill();
+          mockCtx.fillStyle = '#38bdf8';
+          mockCtx.fillRect(poopX - 9, poopY - 24, 4, 14 + ((t * 20) % 10));
+          mockCtx.fillRect(poopX + 5, poopY - 24, 4, 14 + ((t * 20) % 10));
+          mockCtx.fillStyle = '#fff';
+          mockCtx.font = 'bold 11px sans-serif';
+          mockCtx.fillText('엉엉ㅠㅠ', poopX, poopY - 44);
+
+          const bullies = [
+            { name: '변발', x: 252, color: '#f97316', phase: 0 },
+            { name: '돌배', x: 304, color: '#a855f7', phase: 1.5 },
+            { name: '물고기', x: 356, color: '#06b6d4', phase: 3.0 }
+          ];
+
+          bullies.forEach((b) => {
+            const bounce = Math.abs(Math.sin(t * 10 + b.phase)) * 11;
+            const by = 158 - bounce;
+
+            mockCtx.fillStyle = b.color;
+            drawRoundedBox(mockCtx, b.x - 14, by - 30, 28, 38, 7);
+            mockCtx.fill();
+
+            mockCtx.fillStyle = '#fde68a';
+            mockCtx.beginPath();
+            mockCtx.arc(b.x, by - 43, 13, 0, Math.PI * 2);
+            mockCtx.fill();
+
+            if (b.name === '변발') {
+              mockCtx.fillStyle = '#111827';
+              mockCtx.fillRect(b.x - 3, by - 68, 6, 13);
+            } else if (b.name === '돌배') {
+              mockCtx.fillStyle = '#d97706';
+              mockCtx.beginPath();
+              mockCtx.arc(b.x, by - 55, 6, 0, Math.PI * 2);
+              mockCtx.fill();
+            } else if (b.name === '물고기') {
+              mockCtx.fillStyle = '#38bdf8';
+              mockCtx.beginPath();
+              mockCtx.moveTo(b.x - 9, by - 55);
+              mockCtx.lineTo(b.x + 9, by - 55);
+              mockCtx.lineTo(b.x, by - 68);
+              mockCtx.closePath();
+              mockCtx.fill();
+            }
+
+            mockCtx.fillStyle = '#dc2626';
+            mockCtx.beginPath();
+            mockCtx.arc(b.x, by - 40, 5, 0, Math.PI);
+            mockCtx.fill();
+
+            mockCtx.fillStyle = '#fde047';
+            mockCtx.font = 'bold 11px Malgun Gothic, sans-serif';
+            mockCtx.fillText(b.name, b.x, by + 22);
+            mockCtx.fillStyle = '#ffffff';
+            mockCtx.font = 'bold 10px sans-serif';
+            mockCtx.fillText('푸하하!', b.x, by - 72);
+          });
+
+          state.cutsceneAnimId = requestAnimationFrame(renderMockScene);
+        }
+        state.cutsceneAnimId = requestAnimationFrame(renderMockScene);
+      }
+
+      function triggerHappyEnding() {
+        state.running = false;
+        endingOverlay.classList.remove('hidden');
+        sound.startHappyEndingMusic();
+
+        stopCutsceneAnim();
+        const startT = Date.now();
+        const particles = Array.from({ length: 22 }, () => ({
+          x: Math.random() * 400,
+          y: Math.random() * 220,
+          speed: 25 + Math.random() * 40,
+          size: 4 + Math.random() * 5,
+          color: ['#fde047', '#f472b6', '#4ade80', '#38bdf8', '#fb923c'][Math.floor(Math.random() * 5)],
+          type: Math.random() > 0.4 ? 'confetti' : 'note'
+        }));
+
+        function renderHappyEnding() {
+          const t = (Date.now() - startT) / 1000;
+          const w = endingCanvas.width;
+          const h = endingCanvas.height;
+          endingCtx.clearRect(0, 0, w, h);
+
+          const bgGrad = endingCtx.createLinearGradient(0, 0, 0, h);
+          bgGrad.addColorStop(0, '#fef9c3');
+          bgGrad.addColorStop(1, '#bae6fd');
+          endingCtx.fillStyle = bgGrad;
+          endingCtx.fillRect(0, 0, w, h);
+
+          endingCtx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+          endingCtx.lineWidth = 2;
+          for (let gx = 0; gx < w; gx += 35) {
+            endingCtx.beginPath();
+            endingCtx.moveTo(gx, 0);
+            endingCtx.lineTo(gx, h);
+            endingCtx.stroke();
+          }
+          for (let gy = 0; gy < h; gy += 35) {
+            endingCtx.beginPath();
+            endingCtx.moveTo(0, gy);
+            endingCtx.lineTo(w, gy);
+            endingCtx.stroke();
+          }
+
+          const cx = w / 2;
+          const cy = h * 0.56;
+          endingCtx.save();
+          endingCtx.translate(cx, cy - 22);
+          endingCtx.rotate(t * 0.5);
+          for (let i = 0; i < 12; i++) {
+            endingCtx.rotate(Math.PI / 6);
+            endingCtx.fillStyle = 'rgba(250, 204, 21, 0.25)';
+            endingCtx.beginPath();
+            endingCtx.moveTo(0, 0);
+            endingCtx.lineTo(-14, -170);
+            endingCtx.lineTo(14, -170);
+            endingCtx.closePath();
+            endingCtx.fill();
+          }
+          endingCtx.restore();
+
+          endingCtx.fillStyle = '#f472b6';
+          endingCtx.beginPath();
+          endingCtx.ellipse(cx, cy + 64, 100, 20, 0, 0, Math.PI * 2);
+          endingCtx.fill();
+
+          endingCtx.fillStyle = '#ffffff';
+          endingCtx.strokeStyle = '#94a3b8';
+          endingCtx.lineWidth = 3;
+          drawRoundedBox(endingCtx, cx - 44, cy - 40, 34, 58, 7);
+          endingCtx.fill();
+          endingCtx.stroke();
+
+          endingCtx.beginPath();
+          endingCtx.moveTo(cx - 24, cy + 18);
+          endingCtx.lineTo(cx + 34, cy + 18);
+          endingCtx.lineTo(cx + 21, cy + 60);
+          endingCtx.lineTo(cx - 21, cy + 60);
+          endingCtx.closePath();
+          endingCtx.fill();
+          endingCtx.stroke();
+
+          endingCtx.fillStyle = '#e0f2fe';
+          endingCtx.beginPath();
+          endingCtx.ellipse(cx + 8, cy + 18, 36, 9, 0, 0, Math.PI * 2);
+          endingCtx.fill();
+          endingCtx.stroke();
+
+          const happyBob = Math.sin(t * 5) * 3;
+          const px = cx + 6;
+          const py = cy + 5 + happyBob;
+
+          endingCtx.fillStyle = 'rgba(253, 224, 71, 0.55)';
+          endingCtx.beginPath();
+          endingCtx.arc(px, py - 32, 48 + Math.sin(t * 6) * 4, 0, Math.PI * 2);
+          endingCtx.fill();
+
+          endingCtx.fillStyle = '#854d0e';
+          endingCtx.beginPath();
+          endingCtx.ellipse(px, py - 11, 32, 16, 0, 0, Math.PI * 2);
+          endingCtx.fill();
+          endingCtx.beginPath();
+          endingCtx.ellipse(px, py - 27, 24, 14, 0, 0, Math.PI * 2);
+          endingCtx.fill();
+          endingCtx.beginPath();
+          endingCtx.ellipse(px, py - 42, 15, 10, 0, 0, Math.PI * 2);
+          endingCtx.fill();
+          endingCtx.beginPath();
+          endingCtx.moveTo(px - 6, py - 50);
+          endingCtx.quadraticCurveTo(px + 5, py - 63, px + 9, py - 48);
+          endingCtx.fill();
+
+          endingCtx.fillStyle = '#fb7185';
+          endingCtx.beginPath();
+          endingCtx.arc(px - 15, py - 22, 4.5, 0, Math.PI * 2);
+          endingCtx.arc(px + 15, py - 22, 4.5, 0, Math.PI * 2);
+          endingCtx.fill();
+
+          endingCtx.strokeStyle = '#fef08a';
+          endingCtx.lineWidth = 3;
+          endingCtx.beginPath();
+          endingCtx.arc(px - 10, py - 28, 5.5, Math.PI, 0);
+          endingCtx.stroke();
+          endingCtx.beginPath();
+          endingCtx.arc(px + 10, py - 28, 5.5, Math.PI, 0);
+          endingCtx.stroke();
+
+          endingCtx.fillStyle = '#f43f5e';
+          endingCtx.beginPath();
+          endingCtx.arc(px, py - 19, 8, 0, Math.PI);
+          endingCtx.fill();
+
+          endingCtx.fillStyle = '#ffffff';
+          endingCtx.strokeStyle = '#cbd5e1';
+          endingCtx.lineWidth = 2;
+          endingCtx.fillRect(w - 68, 86, 30, 26);
+          endingCtx.strokeRect(w - 68, 86, 30, 26);
+          endingCtx.fillRect(w - 68, 112, 30, 16 + Math.sin(t * 4) * 4);
+
+          endingCtx.fillStyle = '#ffffff';
+          endingCtx.strokeStyle = '#f59e0b';
+          endingCtx.lineWidth = 3;
+          drawRoundedBox(endingCtx, cx - 130, 12, 260, 32, 16);
+          endingCtx.fill();
+          endingCtx.stroke();
+          endingCtx.fillStyle = '#b45309';
+          endingCtx.font = 'bold 14px Malgun Gothic, sans-serif';
+          endingCtx.textAlign = 'center';
+          endingCtx.fillText('✨ 극락 쾌변!! 세상 다 가졌다~♪ ✨', cx, 33);
+
+          particles.forEach((p) => {
+            p.y += p.speed * 0.016;
+            if (p.y > h) p.y = -10;
+            endingCtx.fillStyle = p.color;
+            if (p.type === 'note') {
+              endingCtx.font = 'bold 16px sans-serif';
+              endingCtx.fillText('♪', p.x + Math.sin(t * 3 + p.y * 0.05) * 8, p.y);
+            } else {
+              endingCtx.fillRect(p.x, p.y, p.size, p.size);
+            }
+          });
+
+          state.cutsceneAnimId = requestAnimationFrame(renderHappyEnding);
+        }
+        state.cutsceneAnimId = requestAnimationFrame(renderHappyEnding);
+      }
+
+      function startGame(stageNum) {
+        sound.init();
+        sound.stopHappyEndingMusic();
+        stopCutsceneAnim();
+        startOverlay.classList.add('hidden');
+        stageClearOverlay.classList.add('hidden');
+        gameOverOverlay.classList.add('hidden');
+        endingOverlay.classList.add('hidden');
+
+        resizeCanvas();
+        setupStage(stageNum || 1);
+        state.running = true;
+        state.lastTime = 0;
+        requestAnimationFrame(gameLoop);
+      }
+
+      bindTap(startBtn, () => startGame(1));
+      bindTap(nextStageBtn, () => startGame(state.stage + 1));
+      bindTap(retryBtn, () => startGame(1));
+      bindTap(playAgainBtn, () => startGame(1));
+      bindTap(squeezeBtn, handleSqueeze);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' || e.key === ' ') {
+          if (state.running) {
+            e.preventDefault();
+            handleSqueeze();
+          }
+        }
+      });
+
+      drawClassroomScene(0);
+    })();
+  </script>
+</body>
+</html>
